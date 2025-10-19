@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        /* Firefox */
+        .scroll-content {
+            /* scrollbar-color: #888 transparent;
+            scrollbar-width: thin; */
+            scrollbar-gutter: stable;
+        }
+
+        .scroll-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-content::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .scroll-content:hover {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    
+    <div class="bg-heliolight h-screen">
+        <div class="absolute left-0 top-0 flex items-center justify-center ml-4 mt-4 space-x-4">
+            <a href="{% url 'index' %}" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Back To App</a>
+            <a href="{% url 'contacts' %}" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Contacts</a>
+        </div>
+        <div class="flex flex-col items-center justify-start h-full">
+            <div class="text-center my-4">
+                <h1 class="text-gray-800 text-2xl font-bold">Chat App Users</h1>
+            </div>
+            <div class="max-w-xl w-full bg-white rounded-lg shadow-md p-6 scroll-content h-138 overflow-y-hidden">
+                {% for user in users %}
+                    <div class="relative mb-4 p-1 rounded cursor-pointer pl-4">
+                        <a href="{% url 'profile_page' user.id %}" class="flex items-center justify-start space-x-4">
+                            <div class="w-12 h-12 rounded-full overflow-hidden">
+                                <img src="{% if user.profile and user.profile.photo %}{{ user.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="{{ user.username }}'s photo" class="w-full h-full rounded-full object-cover">
+                            </div>
+                            <div class="flex flex-col items-start space-y-0.5">
+                                <p class="text-lg text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-base text-gray-400">@{{ user.username }}</p>
+                            </div>
+                        </a>
+                        <div class="absolute right-0 inset-y-0 flex items-center justify-center pr-4">
+                            <button type="button" class="{% if user.id in added_user_ids %}bg-heliolight cursor-not-allowed{% else %}bg-heliotrope hover:bg-ebony{% endif %} text-white px-2 py-1 rounded shadow" data-user-id="{{ user.id }}">
+                                {% if user.id in added_user_ids %}Added{% else %}Add Contact{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-gray-600 text-center">No users yet on this app.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('button[data-user-id]');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.dataset.userId;
+                    fetch(`/add-contact/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        // if (response.ok) {
+                
+                        // }
+                        return response.json()
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            button.textContent = 'Added';
+                            button.disabled = true;
+                            button.classList.remove('bg-heliotrope', 'hover:bg-ebony');
+                            button.classList.add('bg-heliolight', 'cursor-not-allowed');
+                        } else {
+                            console.error('Error adding contact:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

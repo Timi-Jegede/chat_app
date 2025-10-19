@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Error</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+</head>
+<body class="antialiased">
+
+    <div class="flex items-center justify-center h-screen bg-heliolight">
+        <div class="max-w-lg w-full">
+            <div class="space-y-12">
+                <div class="w-74 h-74 mx-auto">
+                    <img src="{% static 'img/404.svg' %}" alt="Icon" class="w-full h-full object-cover">
+                </div>
+                <div class="space-y-4 flex flex-col items-center">
+                    <div class="space-y-2 text-center">
+                        <h2 class="text-gray-900 font-bold text-2xl">Oops! Page does not exist</h2>
+                        <p class="text-gray-700 text-base">Looks like you have stumbled upon a page<br> that doesn't exist.</p>
+                    </div>
+                    <a href="{% url 'index' %}" class="w-1/4 p-2 bg-heliotrope hover:bg-ebony text-white font-medium text-base rounded-md text-center">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

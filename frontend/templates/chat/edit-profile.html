@@ -1,0 +1,429 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-heliolight"> 
+
+    <!-- Nav Bar -->
+    {% include 'chat/nav-bar.html' %}
+
+    <!-- Body -->
+    <div class="bg-heliolight px-28 pt-24 pb-7">
+        <div class="space-y-5">
+            
+            <!-- First section -->
+             <div class="rounded-2xl bg-white">
+                <div class="w-full h-120">
+                    {% if user.profile and user.profile.header_img and user.profile.header_img.url %}
+                        <img src="{{ user.profile.header_img.url }}" alt="" class="w-full h-full object-cover rounded-t-2xl">
+                    {% else %}
+                        <img src="{% static 'img/backgrounds/hero.jpg'%}" alt="" class="w-full h-full object-cover rounded-t-2xl">
+                    {% endif %}                
+                </div>
+                <div class="bg-white flex items-center justify-start p-7 rounded-b-2xl space-x-4">
+                    <div class="w-36 h-36 border-2 border-white rounded-md -mt-14 overflow-hidden">
+                        {% if user.profile and user.profile.photo and user.profile.photo.url %}
+                            <img src="{{ user.profile.photo.url }}" alt="" class="w-full h-full object-cover">
+                        {% else %}
+                            <img src="{% static 'img/default.jpg' %}" alt="" class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center space-x-1">
+                            <p class="text-xl font-bold text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                            <small class="text-sm text-gray-600">@{{ user.username }}</small>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-sm text-gray-700">{{ user_contacts_count }} Contacts</p>
+                            <small class="text-xs text-gray-500">&#x25cf; &nbsp;0 Groups</small>
+                        </div>
+                        <div class="flex items-center">
+                            {% for contact in user_contacts_selected %}
+                                <div class="w-8 h-8 rounded-full overflow-hidden z-10 border-1.5 border-white {% if forloop.first %}ml-0{% else %}-ml-2.5{% endif%}">
+                                    <img src="{{ contact.contact.profile.photo.url }}" alt="" class="w-full h-full object-cover">
+                                </div>
+                            {% empty %}
+                                <div></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+             </div>
+
+             <!-- Second Section -->
+              <div>
+                <div class="h-7 inline-flex space-x-4">
+                    <span id="personal-info-tab" class="text-sm text-heliotrope hover:text-heliotrope font-medium border-b-2 border-heliotrope cursor-pointer">Personal Info</span>
+                    <span id="basic-info-tab" class="text-sm text-gray-700 hover:text-heliotrope font-medium cursor-pointer">Basic Info</span>
+                    <span id="settings-tab" class="text-sm text-gray-700 hover:text-heliotrope font-medium cursor-pointer">Settings</span>
+                </div>
+                <div class="bg-white px-6 py-6 rounded-b-2xl">
+                    
+                    <!-- Personal info -->
+                    <div id="personal-info" class="space-y-12">
+                        <div class="flex items-start justify-start space-x-32">
+                            <div class="space-y-2">
+                                <p class="text-gray-800 text-base font-bold">Personal Information</p>
+                                <p class="text-sm text-gray-500 font-medium">Edit Your Personal Info</p>
+                            </div>
+                            <div class="flex-1">
+                                <form action="{% url 'update_personal_info' %}" method="post">
+                                    {% csrf_token %}
+                                    
+                                    <div class="space-y-4">
+                                        <div class="flex items-center space-x-4 flex-1">
+                                            <div class=" flex flex-col space-y-2 w-full">
+                                                <label for="first-name" class="font-medium text-gray-800 text-base">First Name</label>
+                                                <input type="text" name="first-name" id="first-name" placeholder="First Name" value="{{ user.first_name }}" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                            </div>
+                                            <div class="flex flex-col space-y-2 w-full">
+                                                <label for="last-name" class="font-medium text-gray-800 text-base">Last Name</label>
+                                                <input type="text" name="last-name" id="last-name" placeholder="Last Name" value="{{ user.last_name }}" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label for="email" class="font-medium text-gray-800 text-base">Main Email</label>
+                                            <input type="text" name="email" id="email" placeholder="Your email" value="{{ user.email }}" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                            <p class="text-sm text-gray-500 font-medium">You need to have at least one email connected to your account.</p>
+                                        </div>
+                                        <div class="mt-2 flex items-center justify-end">
+                                            <button type="submit" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Save Changes</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="flex items-start justify-start space-x-36">
+                            <div class="space-y-2">
+                                <p class="text-gray-800 text-base font-bold">Sign-in Method</p>
+                                <p class="text-sm text-gray-500 font-medium">Edit Your Personal Info</p>
+                            </div>
+                            <div class="space-y-4 flex-1">
+                                <div class="flex items-center justify-between border border-heliograyer p-4 rounded-md">
+                                    <div class="flex items-center justify-start space-x-4">
+                                        <div class="w-10 h-10 flex items-center justify-center bg-red-700 rounded-md">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                                <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                                <path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                                <path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                                <path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="space-y-0">
+                                            <p class="text-base font-bold text-gray-800">Google Account</p>
+                                            <p class="text-md text-gray-500">Your google account is now connected.</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative inline-block w-9 h-4">
+                                        <input type="checkbox" id="toggle" class="sr-only">
+                                        <label id="slider-container" for="toggle" class="block overflow-hidden h-4 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300">
+                                            <span id="slider" class="block h-3 w-3 rounded-full bg-white shadow transform transition-transform duration-300 translate-x-0 mt-0.5 ml-0.5"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between border border-heliograyer p-4 rounded-md">
+                                    <div class="flex items-center justify-start space-x-4">
+                                        <div class="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-md">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="white">
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="space-y-0">
+                                            <p class="text-base font-bold text-gray-800">Facebook Account</p>
+                                            <p class="text-md text-gray-500">Your can connect with your facebook account.</p>
+                                        </div>
+                                    </div>
+                                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-ssm font-medium">Connect</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Photo -->
+                        <div class="flex items-start justify-start space-x-36">
+                            <div class="space-y-2">
+                                <p class="text-gray-800 text-base font-bold">Your Profile Photo</p>
+                                <p class="text-sm text-gray-500 font-medium">Upload Your Photo</p>
+                            </div>
+                            <div class="space-y-4 flex-1">
+                                <div class="border border-heliograyer p-4 rounded-md">
+                                    
+                                    <!-- Upload Photo -->
+                                    <form action="" method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        
+                                        <label for="photo-upload" class="text-sm inline-block px-2 py-1 bg-heliotrope text-white rounded-md cursor-pointer hover:ebony transition-colors">Choose Photo</label>
+                                        <input type="file" id="photo-upload" name="" accept="image/*" class="hidden">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic info -->
+                     <div id="basic-info" class="hidden">
+                        <div class="flex items-center justify-start space-x-32">
+                            <div class="space-y-2">
+                                <p class="text-base text-gray-800 font-bold">Basic Information</p>
+                                <p class="text-sm text-gray-500 font-medium">Edit Your Basic Info</p>
+                            </div>
+                            <div class="flex-1">
+                                <form action="{% url 'update_basic_info' %}" method="post">
+                                    {% csrf_token %}
+
+                                    <div class="space-y-4">
+                                        <div class="flex flex-col space-y-2">
+                                            <label for="status" class="font-medium text-gray-800 text-base">Status</label>
+                                            <input name="status" id="status" placeholder="Your current status" value="{% if user.profile.status %}{{ user.profile.status }}{% else %}{{ '' }}{% endif %}" class="w-64 px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base" maxlength="20">
+                                        </div>
+                                        <div class="flex flex-col space-y-2">
+                                            <label for="bio" class="font-medium text-gray-800 text-base">Bio</label>
+                                            <textarea name="bio" id="bio" rows="3" placeholder="A short bio of yourself" class="w-96 px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base" maxlength="125">{% if user.profile.bio %}{{ user.profile.bio }}{% else %}{{ '' }}{% endif %}</textarea>
+                                        </div>
+                                        <div class="flex items-start justify-center space-x-4">
+                                            <div class="flex flex-col space-y-2 w-full">
+                                                <label for="birthdate" class="text-base font-medium text-gray-800">Birthday</label>
+                                                <input type="date" name="birthdate" id="birthdate" value="{% if user.profile.birthdate %}{{ user.profile.birthdate|date:'Y-m-d'}}{% endif %}" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                            </div>
+                                            <div class="flex flex-col space-y-2 w-full">
+                                                <label for="gender" class="text-base font-medium text-gray-800">Gender</label>
+                                                <div class="relative">
+                                                    <select name="gender" id="gender" class="w-full px-3 py-2 pr-10 rounded focus:outline-none border border-gray-400 text-gray-500 text-base appearance-none focus:ring-4 focus:ring-heliotrope">
+                                                        <option>Select Gender</option>
+                                                        <option value="male" {% if user.profile.gender == 'male' %}selected{% endif %}>Male</option>
+                                                        <option value="female" {% if user.profile.gender == 'female' %}selected{% endif %}>Female</option>
+                                                    </select>
+                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col space-y-2 w-full">
+                                                <label for="language" class="text-base font-medium text-gray-800">Language</label>
+                                                <input type="text" name="language" id="language" placeholder="Language(s)" value="{% if user.profile.language %}{{ user.profile.language }}{% else %}{{ '' }}{% endif %}" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                                <p class="text-sm text-gray-500 font-medium">Use a comma to add more than one language.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col space-y-2 w-64">
+                                            <label for="city" class="text-base font-medium text-gray-800">City</label>
+                                            <input type="text" name="city" id="city" placeholder="Where do you live?" value="{% if user.profile.city %}{{ user.profile.city }}{% else %}{{ '' }}{% endif %}"" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                        </div>
+                                        <div class="flex flex-col space-y-2 w-64">
+                                            <label for="phone-no">Phone No</label>
+                                            <input type="text" name="phone-no" id="phone-no" placeholder="+1 234 567 8901" value="{% if user.profile.phone_no %}{{ user.profile.phone_no }}{% else %}{{ '' }}{% endif %}"" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                        </div>
+                                        <div class="flex flex-col space-y-2 w-64">
+                                            <label for="nickname">Nickname(s)</label>
+                                            <input type="text" name="nickname" id="nickname" placeholder="Your nickname" value="{% if user.profile.nickname %}{{ user.profile.nickname }}{% else %}{{ '' }}{% endif %}"" class="w-full px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                        </div>
+                                        <div class="mt-2 flex items-center justify-end">
+                                            <button type="submit" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Save</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                     </div>
+
+                     <!-- Settings -->
+                      <div id="settings" class="space-y-4 hidden">
+                        <div class="space-y-1">
+                            <h1 class="text-lg font-bold text-gray-800">Change Your Password</h1>
+                            <p class="text-sm text-gray-500 font-medium">Change your account password to a new one.</p>
+                        </div>
+
+                        <form action="" method="post">
+                            {% csrf_token %}
+
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-start space-x-4">
+                                    <label for="old-password" class="text-base font-medium text-gray-800">Enter Your Old Password</label>
+                                    <input type="password" name="old-password" id="old-password" placeholder="Your Old Password" class="w-64 px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                </div>
+                                <div class="flex items-center justify-start space-x-4">
+                                    <label for="new-password" class="text-base font-medium text-gray-800">Enter Your New Password</label>
+                                    <input type="password" name="new-password" id="new-password" placeholder="Your New Password" class="w-64 px-3 py-2 rounded focus:outline-none border border-gray-400 text-gray-800 text-base">
+                                </div>
+                                <div class="mt-2 flex items-center justify-start">
+                                    <button type="submit" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                      </div>
+                </div>
+              </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div class="max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-medium text-white">Preview Image</h3>
+                <button id="close-modal" class="text-lg text-white hover:text-heliotrope">×</button>
+            </div>
+            
+            <div class="bg-white rounded-lg mb-6 flex items-center justify-center h-120">
+                <div class="w-96 h-96 flex items-center justify-center">
+                    <img id="preview-image" src="" alt="preview" class="rounded">
+                </div>
+            </div>
+            
+            <form id="upload-form" action="{% url 'upload_photo' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="photo" id="hidden-file-input" class="hidden">
+                <div class="flex items-center justify-center space-x-3">
+                    <button type="button" id="choose-different" class="text-sm px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-800 transition-colors">Choose Different</button>
+                    <button type="submit" class="text-sm px-2 py-2 bg-fuchsia-500 text-white rounded hover:bg-fuchsia-800 transition-colors">Upload Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'js/dropdown-config.js' %}"></script>
+    <script src="{% static 'js/tab-switcher.js' %}"></script>
+    <script>
+        const [notification, profile, toggle, personalInfo, basicInfo, settings] =
+               ['#notification-dropdown', '#profile-dropdown', '#toggle', '#personal-info', '#basic-info', '#settings'].map(id => document.getElementById(id.slice(1)));
+        
+        function toggleSlider(checkbox) {
+            const slider = document.getElementById('slider');
+            const label = checkbox.nextElementSibling;
+
+            slider.classList.toggle('translate-x-5', checkbox.checked);
+            label.classList.toggle('bg-gray-300', !checkbox.checked);
+            label.classList.toggle('bg-heliotrope', checkbox.checked);
+        }
+
+        toggle.addEventListener('change', () => toggleSlider(toggle));
+
+        document.getElementById('photo-upload').addEventListener('change', (e) => {
+            document.getElementById('filename').textContent = e.target.files[0] ?.name || 'No file chosen';
+        });
+
+        const dropDownConfigs = {
+            notificationDropDown: {
+                type: { notification },
+                button: {
+                    notification: document.getElementById('notification-button')
+                }
+            },
+            profileDropDown: {
+                type: { profile },
+                button: {
+                    profile: document.getElementById('profile-button')
+                }
+            }
+        };
+
+        initDropDownConfig(dropDownConfigs);
+
+        const tabConfigs = {
+            profile: {
+                tabs: { personalInfo, basicInfo, settings },
+                buttons: {
+                    personalInfo: document.getElementById('personal-info-tab'),
+                    basicInfo: document.getElementById('basic-info-tab'),
+                    settings: document.getElementById('settings-tab')
+                }
+            }
+        };
+
+        initTabSwitcher(tabConfigs);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            if (!hash) return;
+            // const isTrue = hash === '#settings' || hash === '#personal-info' || hash === '#basic-info';
+            // const element = hash === '#settings' ? settings : hash === '#personal-info' ? personalInfo : basicInfo;
+
+            const tabMap = {
+                '#settings': settings,
+                '#personal-info': personalInfo,
+                '#basic-info': basicInfo
+            };
+
+            const element = tabMap[hash];
+            if (!element) return;
+
+            [personalInfo, basicInfo, settings].forEach(tab => tab.classList.toggle('hidden', tab !== element));
+
+            const activeButton = document.getElementById(hash.slice(1) + '-tab');
+            [personalInfo, basicInfo, settings].forEach((_, i) => {
+                const button = ['personal-info-tab', 'basic-info-tab', 'settings-tab'][i];
+                const btn = document.getElementById(button);
+                const isActive = btn === activeButton;
+
+                btn.classList.toggle('text-heliotrope', isActive);
+                btn.classList.toggle('border-b-2', isActive);
+                btn.classList.toggle('border-heliotrope', isActive);
+                btn.classList.toggle('text-gray-700', !isActive);
+            });
+    
+            setTimeout(() => {
+                const offsetTop = element.offsetTop - 120;
+                window.scrollTo({
+                    top: offsetTop
+                });
+            }, 100);
+        }); 
+
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash;
+            if (hash === '#settings') {
+                // Trigger settings tab click
+                document.getElementById('settings-tab').click();
+                setTimeout(() => {
+                    document.getElementById('settings').scrollIntoView({behavior: 'smooth'});
+                }, 100);
+            }
+        });
+
+        const modal = document.getElementById('image-modal');
+        const previewImage = document.getElementById('preview-image');
+        const hiddenFileInput = document.getElementById('hidden-file-input');
+
+        // Trigger file input when clicking the existing label
+        document.getElementById('photo-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    hiddenFileInput.files = document.getElementById('photo-upload').files;
+                    modal.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Choose different image
+        document.getElementById('choose-different').addEventListener('click', () => {
+            document.getElementById('header-img-upload').click();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-heliolight">    
+    
+    <!-- Nav Bar -->
+    {% include 'chat/nav-bar.html' %}
+
+    <!-- Body -->
+    <div class="bg-heliolight px-28 pt-24 pb-7">
+        <div class="space-y-5">
+            
+            <!-- First section -->
+             <div class="rounded-2xl bg-white">
+                <div class="w-full h-120">
+                    {% if profile and profile.header_img and profile.header_img.url %}
+                        <img src="{{ profile.header_img.url }}" alt="" class="w-full h-full object-cover rounded-t-2xl">
+                    {% else %}
+                        <img src="{% static 'img/backgrounds/hero.jpg'%}" alt="" class="w-full h-full object-cover rounded-t-2xl">
+                    {% endif %}
+                </div>
+                <div class="relative bg-white flex items-center justify-start p-7 rounded-b-2xl space-x-4">
+                    <div class="w-36 h-36 border-2 border-white rounded-md -mt-14 overflow-hidden">
+                        {% if profile and profile.photo and profile.photo.url %}
+                            <img src="{{ profile.photo.url }}" alt="" class="w-full h-full object-cover">
+                        {% else %}
+                            <img src="{% static 'img/default.jpg' %}" alt="" class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center space-x-1">
+                            <p class="text-xl font-bold text-gray-800">{{ profile.user.first_name }} {{ profile.user.last_name }}</p>
+                            <small class="text-sm text-gray-600">@{{ profile.user.username }}</small>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-sm text-gray-700">{{ user_contacts_count }} Contacts</p>
+                            <small class="text-xs text-gray-500">&#x25cf; &nbsp;0 Groups</small>
+                        </div>
+                        <div class="flex items-center">
+                            {% for contact in user_contacts_selected %}
+                                <div class="w-8 h-8 rounded-full overflow-hidden z-10 border-1.5 border-white {% if forloop.first %}ml-0{% else %}-ml-2.5{% endif %}">
+                                    <img src="{{ contact.contact.profile.photo.url }}" alt="" class="w-full h-full object-cover">
+                                </div>
+                            {% empty %}
+                                <div></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="absolute top-4 right-10">
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <label for="header-img-upload" class="text-sm inline-block px-2 py-1 bg-heliotrope text-white rounded-md cursor-pointer hover:bg-ebony transition-colors">Choose Header Image</label>
+                            <input type="file" name="" id="header-img-upload" accept="image/*" class="hidden">
+                        </form>
+                    </div>
+                </div>
+             </div>
+
+             <!-- Second Section -->
+              <div>
+                <div class="h-7 inline-flex space-x-4">
+                    <span id="basic-info-tab" class="text-sm text-heliotrope hover:text-heliotrope font-medium border-b-2 border-heliotrope cursor-pointer">Basic Info</span>
+                    <span id="personal-info-tab" class="text-sm text-gray-700 hover:text-heliotrope font-medium cursor-pointer">Personal Info</span>
+                </div>
+                <div class="bg-white px-10 py-10 rounded-b-2xl">
+                    
+                    <!-- Basic info -->
+                    <div id="basic-info" class="space-y-6">
+                        <div class="flex flex-col">
+                            <h2 class="text-lg font-medium text-gray-800">Status</h2>
+                            {% if profile.status %}
+                                <p class="text-base text-gray-500">{{ profile.status }}</p>
+                            {% else %}
+                                <p class="text-base text-gray-500">No status</p>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-col w-108">
+                            <h2 class="text-lg font-medium text-gray-800">About Me</h2>
+                            {% if profile.bio %}
+                                <p class="text-base text-gray-500">{{ profile.bio }}</p>
+                            {% else %}
+                                <p class="text-base text-gray-500">No description</p>
+                            {% endif %}
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Gender</p>
+                                {% if profile.gender %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.gender }}</p>
+                                {% else %}    
+                                    <p class="text-lg font-medium text-gray-800">No gender</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 6c1.11 0 2-.9 2-2 0-.38-.1-.73-.29-1.03L12 1l-1.71 1.97c-.19.3-.29.65-.29 1.03 0 1.1.9 2 2 2zm4.6 9.99l-1.07-1.07-1.08 1.07c-1.3 1.3-3.58 1.31-4.89 0l-1.07-1.07-1.09 1.07C6.75 16.64 5.88 17 4.96 17c-.73 0-1.4-.23-1.96-.61V21c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4.61c-.56.38-1.23.61-1.96.61-.92 0-1.79-.36-2.44-1.01zM18 9H6c-1.66 0-3 1.34-3 3v1c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Birthday</p>
+                                {% if profile.birthdate %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.birthdate|date:"F d, Y" }}</p>
+                                {% else %}
+                                    <p class="text-lg font-medium text-gray-800">No birthday</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 texty-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M15 11V5l-3-3-3 3v2H3v14h18V11h-6zm-8 8H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm6 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">City</p>
+                                {% if profile.city %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.city }}</p>
+                                {% else %}
+                                    <p class="text-lg font-medium text-gray-800">No city</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Language</p>
+                                {% if profile.language %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.language }}</p>
+                                {% else %}
+                                    <p class="text-lg font-medium text-gray-800">No language</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Phone No</p>
+                                {% if profile.phone_no %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.phone_no }}</p>
+                                {% else %}
+                                    <p class="text-lg font-medium text-gray-800">No phone number</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-x-2 flex items-center justify-start">
+                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M5.5,7A1.5,1.5 0 0,1 4,5.5A1.5,1.5 0 0,1 5.5,4A1.5,1.5 0 0,1 7,5.5A1.5,1.5 0 0,1 5.5,7M21.41,11.58L12.41,2.58C12.05,2.22 11.55,2 11,2H4C2.89,2 2,2.89 2,4V11C2,11.55 2.22,12.05 2.59,12.41L11.58,21.41C11.95,21.78 12.45,22 13,22C13.55,22 14.05,21.78 14.41,21.41L21.41,14.41C21.78,14.05 22,13.55 22,13C22,12.45 21.78,11.95 21.41,11.58Z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Nickname</p>
+                                {% if profile.nickname %}
+                                    <p class="text-lg font-medium text-gray-800">{{ profile.nickname }}</p>
+                                {% else %}
+                                    <p class="text-lg font-medium text-gray-800">No nickname</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not profile or profile.user_id == user.id %}
+                            <div class="mt-2 flex items-center justify-end">
+                                <a href="{% url 'edit_profile' %}#basic-info" class="bg-heliotrope text-sm text-white px-2 py-0.5 rounded hover:bg-ebony shadow">Edit Basic Info</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Personal info -->
+                     <div id="personal-info" class="hidden">
+                        <div class="flex items-start justify-start">
+                            <div class="w-48 h-64 border-r border-gray-500">
+                                <h1 class="text-base text-gray-800 font-medium text-left">Your Personal Info</h1>
+                            </div>
+                            <div class="flex-1 space-y-2 px-6">
+                                <div class="flex flex-col space-y-1">
+                                    <h5 class="text-gray-800 text-base font-medium">Username</h5>
+                                    {% if user.username %}
+                                        <p class="text-gray-500 text-base pl-8">@{{ user.username }}</p>
+                                    {% else %}
+                                        <p class="text-gray-500 text-base pl-8">Your username</p>
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-col space-y-1">
+                                    <h5 class="text-gray-800 text-base font-medium">Name</h5>
+                                    {% if user.first_name and user.last_name %}
+                                        <p class="text-gray-500 text-base pl-8">{{ user.first_name }} {{ user.last_name }}</p>
+                                    {% else %}
+                                         <p class="text-gray-500 text-base pl-8">Your Firstname and Last Name</p>
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-col space-y-1">
+                                    <h5 class="text-gray-800 text-base font-medium">Email</h5>
+                                    {% if user.email %}
+                                        <p class="text-gray-500 text-base pl-8">{{ user.email }}</p>
+                                    {% else %}
+                                        <p class="text-gray-500 text-base pl-8">Your email address</p>
+                                    {% endif %}
+                                </div>
+                                {% if not profile or profile.user_id == user.id %}
+                                    <div class="mt-2 flex items-center justify-end">
+                                        <a href="{% url 'edit_profile' %}#personal-info" class="bg-heliotrope text-sm text-white px-2 py-0.5 rounded hover:bg-ebony shadow">Edit Personal Info</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                     </div>
+                </div>
+              </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div class="max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-medium text-white">Preview Image</h3>
+                <button id="close-modal" class="text-lg text-white hover:text-heliotrope">×</button>
+            </div>
+            
+            <div class="bg-white rounded-lg mb-6 flex items-center justify-center h-120">
+                <div class="w-96 h-96 flex items-center justify-center">
+                    <img id="preview-image" src="" alt="preview" class="rounded">
+                </div>
+            </div>
+            
+            <form id="upload-form" action="{% url 'upload_photo' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="header-img" id="hidden-file-input" class="hidden">
+                <div class="flex items-center justify-center space-x-3">
+                    <button type="button" id="choose-different" class="text-sm px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-800 transition-colors">Choose Different</button>
+                    <button type="submit" class="text-sm px-2 py-2 bg-fuchsia-500 text-white rounded hover:bg-fuchsia-800 transition-colors">Upload Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'js/dropdown-config.js' %}"></script>
+    <script src="{% static 'js/tab-switcher.js' %}"></script>
+    <script>
+        const [notification, profile, toggle, basicInfo, personalInfo] =
+               ['#notification-dropdown', '#profile-dropdown', '#toggle', '#basic-info', '#personal-info'].map(id => document.getElementById(id.slice(1)));             
+
+        const dropDownConfigs = {
+            notificationDropDown: {
+                type: { notification },
+                button: {
+                    notification: document.getElementById('notification-button')
+                }
+            },
+            profileDropDown: {
+                type: { profile },
+                button: {
+                    profile: document.getElementById('profile-button')
+                }
+            }
+        };
+
+        initDropDownConfig(dropDownConfigs);
+
+        const tabConfigs = {
+            profile: {
+                tabs: { basicInfo, personalInfo },
+                buttons: {
+                    basicInfo: document.getElementById('basic-info-tab'),
+                    personalInfo: document.getElementById('personal-info-tab')
+                }
+            }
+        };
+
+        initTabSwitcher(tabConfigs);
+    </script>
+    <script>
+        const modal = document.getElementById('image-modal');
+        const previewImage = document.getElementById('preview-image');
+        const hiddenFileInput = document.getElementById('hidden-file-input');
+        // const uploadForm = document.getElementById('upload-form');
+
+        // Trigger file input when clicking the existing label
+        document.getElementById('header-img-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    hiddenFileInput.files = document.getElementById('header-img-upload').files;
+                    modal.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Choose different image
+        document.getElementById('choose-different').addEventListener('click', () => {
+            document.getElementById('header-img-upload').click();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

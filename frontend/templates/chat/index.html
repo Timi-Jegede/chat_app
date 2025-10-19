@@ -1,0 +1,1984 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        /* Firefox */
+        .scroll-content {
+            /* scrollbar-color: #888 transparent;
+            scrollbar-width: thin; */
+            scrollbar-gutter: stable;
+        }
+
+        .scroll-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-content::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .scroll-content:hover {
+            overflow-y: auto;
+        }
+
+        .audio-record-btn.recording {
+            background-color: fuchsia;
+            color: white;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    
+    <!-- Nav Bar -->
+
+    {% include 'chat/nav-bar.html' with active_page="index" %}
+
+    <div class="grid grid-cols-13 h-157 border-t border-heliolight pt-16">
+       
+        <!-- First column -->
+        <div class="col-span-3 bg-white overflow-hidden scroll-content first-column">
+            
+            <!-- header -->
+             <div class="pl-5 pr-5 first-column-header">
+                <div class="flex items-center justify-between pt-4 pb-4">
+                    <div><h1>Chats</h1></div>
+                    <div class="flex items-center text-xs font-medium text-gray-800">
+                        <a href="{% url 'contacts' %}"><span class="hover:text-heliolight">+ &nbsp; New</span></a>
+                    </div>
+                </div>
+                <div class="relative pt-2 pb-2">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="search" name="conversation-search-input" class="pl-10 p-1.5 rounded-full bg-heliogray text-gray-800 text-md w-full focus:outline-none" placeholder="Search contact / chat">
+                </div>
+             </div>
+
+             <!-- Chats and messages -->
+              {% for conversation in conversations %}
+                <div class="relative pl-5 pr-4 {% if forloop.first %}bg-heliograyer{% endif %} py-2 hover:bg-heliograyer cursor-pointer conversation-item" data-conversation-user-id="{{ conversation.other_user.id }}">
+                    <div class="flex-1">
+                        <a href="{% url 'private_chat' conversation.other_user.id %}" class="flex items-center space-x-4 flex-1">
+                            <div class="w-12 h-12">
+                                {% if conversation.other_user.profile.photo %}
+                                    <img src="{{ conversation.other_user.profile.photo.url }}" alt="" class="rounded w-full h-full object-cover">
+                                {% else %}
+                                    <img src="{% static 'img/default.jpg' %}" alt="" class="rounded w-full h-full object-cover">
+                                {% endif %}
+                            </div>
+                            <div class="text-gray-800">
+                                <div class="flex items-center space-x-4">
+                                    <p class="text-sm font-medium conversation-username">{{ conversation.other_user.first_name }} {{ conversation.other_user.last_name }}</p>
+                                </div>
+                                <div class="flex items-center space-x-4 mt-0.5">
+                                    <p class="text-xs conversation-content">{{ conversation.latest_message.content|truncatechars:20 }}</p><small class="text-gray-600 text-xxs" data-timestamp="{{ conversation.latest_message.timestamp.isoformat }}">&#8226; {{ conversation.latest_message.timestamp|timesince }} ago</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="group w-10 h-10 absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
+                        <div class="group/button group-hover:flex hidden w-9 h-9 rounded-full bg-white hover:bg-heliolight items-center justify-center contact-button mx-auto">
+                            <span class="font-bold text-base group-hover/button:text-heliotrope">...</span>
+                        </div>
+
+                        <!-- contact dropdown -->
+                        <div class="hidden z-50 w-50 bg-white absolute right-4 top-10 border border-gray-200 rounded-md contact-dropdown">
+                            <div class="p-4 border-b border-gray-200 space-y-4">
+                                <a href="{% url 'profile_page' conversation.other_user.id %}" class="block">
+                                    <div class="flex items-center justify-start space-x-2 cursor-pointer group/dropdown">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">View Profile</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer archive-chat" data-archive-chat="{{ other_user.id }}">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Archive</p>
+                                </div>
+                                <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer delete-chat" data-delete-chat="{{ other_user.id }}">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Delete</p>
+                                </div>
+                                <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Report</p>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+                </div>
+               {% empty %}
+                    <div class="pl-5 pr-4 pt-4 pb-4 text-center text-gray-500">
+                        <p class="text-sm">No conversations yet</p>
+                        <a href="{% url 'contacts' %}" class="text-xs text-heliotrope hover:underline">Start a new conversation</a>
+                    </div>
+               {% endfor %}
+        </div>
+
+        <!-- Second column -->
+         <div class="col-span-7 bg-gray-100 border-l border-heliolight">
+
+            <!-- Header -->
+            <div class="h-20 bg-white flex items-center justify-between px-5 py-5">
+                <div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-11 h-11">
+                            <img src="{% if other_user.profile and other_user.profile.photo %}{{ other_user.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="" class="rounded w-full h-full object-cover">
+                        </div>
+                        <div class="text-gray-800">
+                            <div>
+                                {% if other_user %}
+                                    <p class="text-sm font-medium">{{ other_user.username }}</p>
+                                {% else %}
+                                    <p class="text-sm italic">Add a user and begin messaging</p>
+                                {% endif %}
+                            </div>
+                            <div class="mt-1">
+                                <p class="text-xxs" data-other-user-id="{{ other_user.id }}">
+
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    
+                    <!-- Video icon -->
+                    <button id="video-call-button" class="w-9 h-9">
+                        <svg class="h-9 w-9 text-gray-800 bg-heliograyer rounded-md p-2 border-box hover:bg-heliolight hover:text-heliotrope" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+
+                    <!-- Toggle screen icon -->
+                    <button onclick="toggleColumn()">
+                        <svg class="h-9 w-9 text-gray-800 bg-heliograyer rounded-md p-2 border-box hover:bg-heliolight hover:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output box -->
+            <div class="h-101 bg-heliolight p-4 overflow-hidden scroll-content chat-display-area">
+
+                {% for item in messages_with_separators %}
+                    {% if item.is_separator %}
+                        <div class="flex justify-center my-4">
+                            <div class="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full" data-timestamp="{{ item.timestamp.isoformat }}">
+                                {{ item.timestamp|date:"F j, Y, g:i A" }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="message-parent flex group/delete {% if item.message.sender == request.user %}justify-end{% else %}justify-start{% endif %} items-center space-x-4 mb-2">
+                            {% if item.message.sender == request.user %}
+                                <div class="relative">
+                                    <div class="opacity-0 group-hover/delete:opacity-100 flex items-center justify-center w-6 h-6 rounded-full hover:bg-heliolight cursor-pointer shadow-lg group message-dropdown-btn">
+                                        <span class="text-black text-lg font-medium group-hover:text-heliotrope">...</span>
+                                    </div>
+
+                                    <div class="hidden absolute top-6 right-0 bg-white p-4 shadow-lg rounded z-10 message-dropdown">
+                                        <button class="flex items-center justify-center space-x-2 group/dropdown delete-message {% if item.type == 'image' or item.type == 'video' or item.type == 'document' or item.type == 'link' or item.type == 'audio' %}file{% endif %}" data-message-id="{{ item.message.id }}">
+                                            <svg class="w-4 h-4 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            <span class="text-gray-700 text-sm group-hover/dropdown:text-heliotrope">Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="max-w-3/4 {% if item.message.sender == request.user %}bg-fuchsia-400{% else %}bg-white{% endif %} text-black {% if item.type == 'audio' %}rounded-2xl{% else %}rounded-lg{% endif %} shadow relative {% if item.type == 'text' %}pr-16{% endif %} pb-4">
+                                {% if item.type == 'image' %}
+                                    <div class="w-44 h-44 rounded-md flex items-center justify-center bg-slate-400">
+                                        <img src="{{ item.message.image.url }}" alt="" class="w-full h-full object-cover rounded-md">
+                                    </div>
+                                    <p class="text-sm p-2">{% if item.image_caption != null %}{{ item.image_caption }}{% endif %}</p>
+                                {% elif item.type == 'video' %}
+                                    <div class="w-56 rounded mb-2">
+                                        <video src="{{ item.message.video.url }}" class="rounded" controls></video>
+                                    </div>
+                                {% elif item.type == 'document' %}
+                                    {% load chat_filters %}
+                                    <div class="flex items-center justify-start pl-2 pt-2 pr-4 space-x-2 cursor-pointer">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/>
+                                        </svg>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm">{{ item.message.file.name|filename }}</span>
+                                            <span class="text-gray-500 text-xs">{{ item.size|file_size_mb }} MB</span>
+                                        </div>
+                                    </div>
+                                {% elif item.type == 'link' %}
+                                    <a href="{{ item.message.link }}" target="_blank" class="block px-4 py-2 text-sm text-unvisited-link underline">{{ item.message.link }}</a>
+                                {% elif item.type == 'audio' %}
+                                    <div class="w-56 bg-gray-200 rounded-2xl p-3 mb-2">
+                                        <audio src="{{ item.message.audio.url }}" class="hidden" data-audio-id="{{ item.message.id }}"></audio>
+                                        <div class="flex items-center space-x-3">
+                                            <button class="play-btn w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white" data-audio-id="{{ item.message.id }}">
+                                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M8 5v10l8-5-8-5z"/>
+                                                </svg>
+                                            </button>
+                                            <div class="flex-1">
+                                                <div class="progress-bar w-full h-1 bg-gray-300 rounded cursor-pointer" data-audio-id="{{ item.message.id }}">
+                                                    <div class="progress w-0 h-full bg-blue-500 rounded"></div>
+                                                </div>
+                                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                                    <span class="current-time">0:00</span>
+                                                    <span class="duration">0:00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>    
+                                {% else %}
+                                    <p class="text-sm p-3">{{ item.message.content }}</p>
+                                {% endif %}
+                                    <span class="text-xs {% if item.message.sender == request.user %}text-fuchsia-100{% else %}text-gray-500{% endif %} absolute bottom-1 right-2" data-timestamp="{{ item.message.timestamp.isoformat }}">{{ item.message.timestamp|date:"H:i" }}</span>
+                            </div>
+                            {% if item.message.sender != request.user %}
+                                <div class="relative">
+                                    <div class="opacity-0 group-hover/delete:opacity-100 flex items-center justify-center w-6 h-6 rounded-full hover:bg-heliolight cursor-pointer shadow-lg group message-dropdown-btn">
+                                        <span class="text-black text-lg font-medium group-hover:text-heliotrope">...</span>
+                                    </div>
+
+                                    <div class="hidden absolute top-6 left-0 bg-white p-4 shadow-lg rounded z-10 message-dropdown">
+                                        <button class="flex items-center justify-center space-x-2 group/dropdown delete-message {% if item.type == 'image' or item.type == 'video' or item.type == 'document' or item.type == 'link' or item.type == 'audio' %}file{% endif %}" data-message-id="{{ item.message.id }}">
+                                            <svg class="w-4 h-4 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            <span class="text-gray-700 text-sm group-hover/dropdown:text-heliotrope">Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %} 
+                {% endfor %}
+            </div>
+
+
+            <!-- Input box -->
+            <div class="relative h-20 bg-white chat-input-area">
+                <div class="absolute top-0 right-0">
+                    <div id="preview-area" class="absolute bottom-0 right-5"></div>
+                </div>
+
+                <div class="flex items-center justify-center h-full p-5 space-x-4">
+                    <!-- <span id="input-value-button" class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-black text-xl font-medium bg-heliograyer hover:bg-heliolight rounded-full">+</span> -->
+
+                    <!-- Attach file -->
+                    <label for="attach-file" class="cursor-pointer p-2 bg-heliograyer hover:bg-heliolight rounded-full group">
+                        <svg class="w-4 h-4 text-black group-hover:text-heliotrope" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                    </label>
+                    <input id="attach-file" type="file" class="hidden" />
+
+                    <!-- Emoji -->
+                    <button type="button" id="emoji-btn" class="p-2 bg-heliograyer hover:bg-heliolight rounded-full group">
+                        <svg class="w-4 h-4 text-black group-hover:text-heliotrope pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+
+                    <!-- Chat message input -->
+                    <input type="text" name="" id="chat-message-input" class="bg-heliograyer w-full py-1.5 px-3 rounded-md focus:outline-none">
+
+                    <!-- Audio message -->
+                    <button class="p-2 hover:bg-heliolight rounded-full audio-record-btn group">
+                        <svg class="w-4 h-4 text-black group-hover:text-heliotrope" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </button>
+
+                    <!-- Recording indicator -->
+                    <div class="recording-indicator hidden text-red-500 text-sm">🔴 Recording...</div>
+
+                    <!-- Send button -->
+                    <button id="chat-message-submit" class="p-2 hover:bg-heliolight hover:rounded-full hover:text-blue-600 group">
+                        <svg class="w-4 h-4 text-black group-hover:text-heliotrope" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L15 22L11 13L2 9L22 2Z" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Emoji Picker -->
+                <div id="emoji-picker-container" style="position: absolute; bottom: 60px; display:  none; z-index: 100;">
+                    <emoji-picker></emoji-picker>
+                </div>
+            </div>
+         </div>
+
+         <!-- Third column -->
+          <div id="third-column" class="col-span-3 overflow-hidden scroll-content">
+            <div class="w-full h-36 bg-gray-100">
+                <img src="{% if other_user.profile and other_user.profile.header_img %}{{ other_user.profile.header_img.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="" class="w-full h-full object-cover">
+            </div>
+            <div class="px-4">
+                <div class="flex flex-col items-center justify-center space-y-3">
+                    <div class="w-13 h-13 border-2 border-white -mt-5 rounded-md">
+                        <img src="{% if other_user.profile and other_user.profile.photo %}{{ other_user.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="" class="rounded w-full h-full object-cover">
+                    </div>
+                    <div class="text-gray-800 space-y-0.5 text-center">
+                        <p class="text-sm font-medium">{{ other_user.first_name }} {{ other_user.last_name }}</p>
+                        <p class="text-xxs active-time" data-other-user-id="{{ other_user.id }}">
+
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center space-x-4 py-4">
+                    <div id="mute-button" class="w-18 h-16 bg-heliograyer flex flex-col items-center justify-center rounded-md hover:text-heliotrope hover:bg-heliolight group space-y-0.5 cursor-pointer">
+                        <svg class="w-6 h-6 text-gray-900 group-hover:text-heliotrope" fill="currentColor" stroke="none" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p class="text-xs font-medium">Mute</p>
+                    </div>
+                    <div id="media" class="w-18 h-16 bg-heliograyer flex flex-col items-center justify-center rounded-md hover:text-heliotrope hover:bg-heliolight group space-y-0.5 cursor-pointer">
+                        <svg id="media-icon" class="w-6 h-6 text-gray-900 group-hover:text-heliotrope" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21,15 16,10 5,21"/>
+                            <rect x="1" y="1" width="18" height="18" rx="2" ry="2" opacity="0.3"/>
+                        </svg>
+                        <p class="text-xs font-medium">Media</p>
+                    </div>
+                    <div id="options" class="w-18 h-16 bg-heliograyer flex flex-col items-center justify-center rounded-md hover:text-heliotrope hover:bg-heliolight group space-y-0.5 cursor-pointer">
+                        <svg id="options-icon" class="w-6 h-6 text-gray-900 group-hover:text-heliotrope" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="21" y1="4" x2="14" y2="4"/>
+                            <line x1="10" y1="4" x2="3" y2="4"/>
+                            <line x1="21" y1="12" x2="12" y2="12"/>
+                            <line x1="8" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="20" x2="16" y2="20"/>
+                            <line x1="12" y1="20" x2="3" y2="20"/>
+                            <line x1="14" y1="1" x2="14" y2="7"/>
+                            <line x1="8" y1="9" x2="8" y2="15"/>
+                            <line x1="16" y1="17" x2="16" y2="23"/>
+                        </svg>
+                        <p class="text-xs font-medium">Options</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mute modal -->
+             <div id="mute-modal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                <div class="relative max-w-xs w-full">
+                    <div class="rounded bg-white p-6 space-y-4">
+                        <h2 class="text-gray-700 text-xl font-medium">Mute conversation</h2>
+                        <div class="flex flex-col items-start space-y-2">
+                            <div class="flex items-center justify-start space-x-2">
+                                <label>
+                                    <input type="radio" name="mute-duration" id="mute-fifteen-mins" class="sr-only peer" checked>
+                                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:bg-heliotrope peer-focus:ring-2 peer-focus:ring-heliotrope peer-focus:ring-opacity-50 flex items-center justify-center">
+                                        <svg class="w-2 h-2 text-white peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                            <circle cx="10" cy="10" r="6"/>
+                                        </svg>
+                                    </div>
+                                </label>
+                                <p class="text-gray-500 text-base font-medium">For 15 minutes</p>
+                            </div>
+                            <div class="flex items-center justify-start space-x-2">
+                                <label>
+                                    <input type="radio" name="mute-duration" id="mute-an-hour" class="sr-only peer">
+                                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:bg-heliotrope peer-focus:ring-2 peer-focus:ring-heliotrope peer-focus:ring-opacity-50 flex items-center justify-center">
+                                        <svg class="w-2 h-2 text-white peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                            <circle cx="10" cy="10" r="6"/>
+                                        </svg>
+                                    </div>
+                                </label>
+                                <p class="text-gray-500 text-base font-medium">For 1 hour</p>
+                            </div>
+                            <div class="flex items-center justify-start space-x-2">
+                                <label>
+                                    <input type="radio" name="mute-duration" id="mute-a-day" class="sr-only peer">
+                                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:bg-heliotrope peer-focus:ring-2 peer-focus:ring-heliotrope peer-focus:ring-opacity-50 flex items-center justify-center">
+                                        <svg class="w-2 h-2 text-white peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                            <circle cx="10" cy="10" r="6"/>
+                                        </svg>
+                                    </div>
+                                </label>
+                                <p class="text-gray-500 text-base font-medium">For 1 day</p>
+                            </div>
+                            <div class="flex items-center justify-start space-x-2">
+                                <label>
+                                    <input type="radio" name="mute-duration" id="infinite" class="sr-only peer">
+                                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:bg-heliotrope peer-focus:ring-2 peer-focus:ring-heliotrope peer-focus:ring-opacity-50 flex items-center justify-center">
+                                        <svg class="w-2 h-2 text-white peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                            <circle cx="10" cy="10" r="6"/>
+                                        </svg>
+                                    </div>
+                                </label>
+                                <p class="text-gray-500 text-base font-medium">Until I turn back On</p>
+                            </div>
+                        </div>
+                        <div class="space-x-4">
+                            <button id="mute" class="bg-red-700 px-2 text-base font-medium text-white py-1 rounded-md hover:bg-red-800">
+                                Mute
+                            </button>
+                            <button class="bg-heliograyer px-2 text-base font-medium text-gray-700 py-1 rounded-md hover:bg-heliolight hover:text-heliotrope close-mute-modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="absolute -top-5 -right-3 bg-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-heliolight cursor-pointer group/close-button shadow-md close-mute-modal">
+                        <span class="text-gray-700 font-bold text-base group-hover/close-button:text-heliotrope">x</span>
+                    </div>
+                </div>
+             </div>
+
+            <!-- Media and Options Box -->
+            <!-- Options -->
+            <div id="options-box">
+                <div class="border-b border-gray-400 h-6">
+                    <div class="flex items-center space-x-4 text-xs font-medium px-4">
+                        <p id="customize-tab" class="h-6 border-b-2 border-heliotrope text-heliotrope cursor-pointer hover:border-b-2 hover:border-heliotrope hover:text-heliotrope">Customize</p>
+                        <p id="manage-tab" class="h-6 hover:border-b-2 hover:border-heliotrope hover:text-heliotrope cursor-pointer">Manage</p>
+                    </div>
+                </div>
+
+                <!-- Customize -->
+                <div id="customize" class="px-4 pb-4">
+                    <!-- Change theme -->
+                    <div class="pt-4 space-y-2">
+                        <p class="text-xxs text-gray-700 font-bold">CHANGE THEME</p>
+                        <div class="flex items-center justify-start space-x-4">
+                            <div id="default-theme" class="w-8 h-8 rounded-full bg-heliogray flex items-center justify-center cursor-pointer">
+                                <div class="w-5 h-5 rounded-full overflow-hidden flex">
+                                    <div class="w-1/2 h-full bg-heliotrope"></div>
+                                    <div class="w-1/2 h-full bg-white"></div>
+                                </div>
+                            </div>
+                            <div id="blue-theme" class="w-8 h-8 rounded-full bg-heliogray flex items-center justify-center cursor-pointer">
+                                <div class="w-5 h-5 rounded-full overflow-hidden flex">
+                                    <div class="w-1/2 h-full bg-blue-600"></div>
+                                    <div class="w-1/2 h-full bg-white"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Change Background -->
+                     <div id="background-theme" class="pt-4 space-y-2">
+                        <div id="background-theme-header" class="flex items-center justify-between">
+                            <p class="text-xxs text-gray-700 font-bold">CHANGE BACKGROUND</p>
+                            {#{% if background_options %}#}
+                                <!-- <span id="remove-background" class="text-xxs text-gray-800 font-medium bg-heliolight hover:bg-heliotrope px-1 cursor-pointer rounded">Remove background</span> -->
+                            {#{% endif %}#}
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            {% for bg in background_options %}
+                                <img src="{{ bg.image.url }}" alt="{{ bg.name }}" class="w-full h-full rounded object-cover cursor-pointer background-option" data-bg-url="{{ bg.image.url }}">
+                            {% empty %}
+                                <p class="text-xs text-gray-500 col-span-3">No backgrounds available</p>
+                            {% endfor %}
+                        </div>
+                     </div>
+
+                     <!-- Edit Nicknames -->
+                      <div class="pt-4 space-y-2">
+                        <p class="text-xxs text-gray-700 font-bold">NICKNAMES</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-11 h-11">
+                                    <img src="{% if other_user.profile and other_user.profile.photo %}{{ other_user.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="" class="rounded w-full h-full object-cover">
+                                </div>
+                                <div class="text-gray-800">
+                                    <div>
+                                        <p class="text-sm font-medium">{{ other_user.first_name }} {{ other_user.last_name }}</p>
+                                    </div>
+                                    <div class="mt-1">
+                                        {% if other_user.profile.nickname %}
+                                            <p class="text-xxs">og : {{ other_user.profile.nickname }}</p>
+                                        {% else %}
+                                            <p class="text-xxs">No nickname yet</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+
+                <!-- Manage -->
+                <div id="manage" class="px-4 pb-4 space-y-0.5 hidden">
+                    {% if other_user %}
+                        <div class="mt-2 py-2 px-1 rounded-md flex items-center space-x-4 cursor-pointer hover:bg-heliograyer toggle-block" data-other-user-id="{{ other_user.id }}">
+                            <div class="w-9 h-9 rounded-md bg-heliograyer flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path stroke-linecap="round" d="M4.93 4.93l14.14 14.14"/>
+                                </svg>
+                            </div>
+                            <div class="text-gray-800">
+                                <p class="text-sm font-medium">Block</p>
+                                <p class="text-xxs">Jasmine will no longer be in your contact. </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Media box -->
+            <div id="media-box" class="hidden">
+                <div class="border-b border-gray-400 h-6">
+                    <div class="flex items-center space-x-4 text-xs font-medium px-4">
+                        <p id="images-tab" class="h-6 border-b-2 border-heliotrope text-heliotrope cursor-pointer hover:border-b-2 hover:border-heliotrope hover:text-heliotrope">Images</p>
+                        <p id="videos-tab" class="h-6 hover:border-b-2 hover:border-heliotrope hover:text-heliotrope cursor-pointer">Videos</p>
+                        <p id="files-tab" class="h-6 hover:border-b-2 hover:border-heliotrope hover:text-heliotrope cursor-pointer">Files</p>
+                        <p id="links-tab" class="h-6 hover:border-b-2 hover:border-heliotrope hover:text-heliotrope cursor-pointer">Links</p>
+                    </div>
+                </div>
+
+                <!-- Images -->
+                <div id="shared-images" class="px-4 pb-4">
+                    <!-- View Images -->
+                    <div id="media-images" class="pt-4 grid grid-cols-3 gap-2">
+                    </div>
+                </div>
+
+                <div id="shared-videos" class="px-4 pb-4 hidden">
+                    <!-- View Videos -->
+                    <div id="media-videos" class="pt-4 grid grid-cols-2 gap-2">
+                    </div>
+
+                    <!-- Media Video Modal -->
+                    <div id="media-video-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 hidden">
+                    </div>
+                </div>
+
+                <!-- Files -->
+                <div id="shared-files" class="px-4 pb-4 hidden">
+                    <!-- View Files -->
+                    <div id="media-files" class="pt-4 space-y-4">
+                    </div>
+                </div>
+
+                <!-- Links -->
+                <div id="shared-links" class="px-4 pb-4 hidden">
+                    <!-- View Links -->
+                    <div id="media-links" class="pt-4 space-y-4">
+                    </div>
+                </div>
+            </div>
+          </div>
+    </div>
+    
+    <!-- Media Carousel Modal -->
+    <div id="media-carousel-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="relative h-screen flex items-center justify-center max-w-4xl w-full mx-4">
+            <div class="relative w-full mx-4">
+                <div id="media-modal-carousel" class="flex transition-transform duration-300">
+                </div>
+                <button type="button" id="delete" class="mx-auto block mt-2 text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-800 transition-colors">Delete Image</button>
+                <button id="prev-image" type="button" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full w-10 h-10 flex items-center justify-center">‹</button>
+                <button id="next-image" type="button" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full w-10 h-10 flex items-center justify-center">›</button>
+            </div>
+            <button id="close-carousel" type="button" class="absolute top-4 right-4 bg-white rounded-full w-8 h-8 flex items-center justify-center">×</button>
+        </div>
+    </div>
+
+    {% include 'video-call/call-modal.html' %}
+
+    {{ user.id|json_script:"user-id" }}
+    {{ other_user.id|json_script:"other-user-id" }}
+    {{ last_message_timestamp|json_script:"last-message-time" }}
+
+    <script>
+        const userId = JSON.parse(document.getElementById('user-id').textContent);
+        const otherUserId = JSON.parse(document.getElementById('other-user-id').textContent);
+    </script>
+    <script src="{% static 'js/dropdown-config.js' %}"></script>
+    <script src="{% static 'js/tab-switcher.js' %}"></script>
+    <script src="{% static 'js/mute-chats.js' %}"></script>
+    <script src="{% static 'js/video-call-setup.js' %}"></script>
+    <script src="{% static 'js/audio-message-setup.js' %}"></script>
+    <script>
+        const [mediaBox, sharedImages, sharedVideos, sharedFiles,
+                sharedLinks, media, mediaIcon, options, optionsIcon, customize, manage, optionsBox, notification, profile, muteButton] =
+               ['#media-box', '#shared-images', '#shared-videos', '#shared-files', '#shared-links',
+                    '#media', '#media-icon', '#options', '#options-icon', '#customize', 
+                    '#manage', '#options-box', '#notification-dropdown', '#profile-dropdown', '#mute-button'].map(id => document.getElementById(id.slice(1)));
+        
+        const contactButtons = document.querySelectorAll('.contact-button');
+        const contactDropDowns = document.querySelectorAll('.contact-dropdown');
+
+        const muteModal = document.getElementById('mute-modal');
+        const mute = document.querySelector('#mute');
+        const closeMuteModal = document.querySelectorAll('.close-mute-modal');
+        const muteElements = `<svg class="w-6 h-6 text-gray-900 group-hover:text-heliotrope" fill="currentColor" stroke="none" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                <p class="text-xs font-medium">Mute</p>`;
+        let isMuted = false;
+
+        muteButton.addEventListener('click', () => {
+            if (isMuted) {
+                unmuteProcess('{{ thread_name }}');
+            } else {
+                muteModal.classList.remove('hidden');
+            }
+        });
+        
+        mute.addEventListener('click', () => {
+            isMuted = true;
+            muteModal.classList.add('hidden');
+            if (muteButton.classList.contains('hover:bg-heliolight')) muteButton.classList.remove('hover:bg-heliolight');             
+            const mutedElements = `<svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8.5 14v3a3.5 3.5 0 1 0 7 0v-.849l-7-7V14zM12 2a2 2 0 0 1 2 2v.341c3.99.91 7 4.49 7 8.659 0 .934-.138 1.836-.395 2.687l-1.484-1.484A6.967 6.967 0 0 0 19 12c0-3.17-2.11-5.85-5-6.71V5a2 2 0 1 0-4 0v.341A6.977 6.977 0 0 0 6.239 7.76L4.825 6.346A8.97 8.97 0 0 1 10 4.341V4a2 2 0 0 1 2-2z"/>
+                                        <path d="M3.707 2.293a1 1 0 0 0-1.414 1.414l18 18a1 1 0 0 0 1.414-1.414l-18-18z"/>
+                                        <path d="M5.868 7.282l11.85 11.85A8.967 8.967 0 0 1 12 21c-2.485 0-4.73-.993-6.364-2.636L5.868 7.282z"/>
+                                    </svg>
+                                    <p class="text-xs font-medium text-gray-400">Muted</p>`;
+            muteButton.innerHTML = mutedElements;
+            localStorage.setItem('mutedElements', mutedElements);
+        });
+
+        closeMuteModal.forEach(button => {
+            button.addEventListener('click', () => {
+                muteModal.classList.add('hidden');
+            });
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            options.classList.add('bg-heliolight', 'text-heliotrope');
+            optionsIcon.classList.add('text-heliotrope');
+
+            if (localStorage.getItem('mutedElements')) {
+                isMuted = true;
+                if (muteButton.classList.contains('hover:bg-heliolight')) muteButton.classList.remove('hover:bg-heliolight'); 
+                muteButton.innerHTML = localStorage.getItem('mutedElements');
+
+                let mutedChats = JSON.parse(localStorage.getItem('mutedChats' || '{}'));
+                
+                if (mutedChats && mutedChats['{{ thread_name }}']) {
+                    const muteUntil = mutedChats['{{ thread_name }}'];
+                    const utc = new Date(muteUntil);
+
+                    if (utc instanceof Date && !isNaN(utc.getTime())) {
+                        const now = new Date();
+                        const mutedTimeLeft = utc - now;
+                        
+                        
+                        setTimeout(() => {
+                            delete mutedChats['{{ thread_name }}'];
+                            localStorage.setItem('mutedChats', JSON.stringify(mutedChats));
+                            localStorage.removeItem('mutedElements');
+                            isMuted = false;
+                            muteButton.classList.add('hover:bg-heliolight');
+                            muteButton.innerHTML = muteElements;
+                        }, mutedTimeLeft);
+                    } else {
+                        {};
+                    }                    
+                }
+            }
+
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            conversationItems.forEach(item => {
+                const conversationId = item.dataset.conversationUserId;
+                
+                if (conversationId == '{{ other_user.id }}') {
+                    item.classList.add('bg-heliograyer');
+                } else {
+                    item.classList.remove('bg-heliograyer');
+                }
+            });
+        });
+
+        const tabConfig = {
+            options: { button: options, icon: optionsIcon, box: optionsBox },
+            media: { button: media, icon: mediaIcon, box: mediaBox}
+        };
+
+        function switchTab(activeTab) {
+            Object.entries(tabConfig).forEach(([key, config]) => {
+                isActive = key === activeTab;
+                config.button.classList.toggle('bg-heliolight', isActive);
+                config.button.classList.toggle('text-heliotrope', isActive);
+                config.icon.classList.toggle('text-heliotrope', isActive);
+                config.box.classList.toggle('hidden', !isActive);
+            });
+        }
+
+        options.addEventListener('click', () => switchTab('options'));
+        media.addEventListener('click', () => {
+            switchTab('media')
+            getSharedFiles();
+        });
+
+        const subTabConfigs = {
+            media: {
+                tabs: { sharedImages, sharedVideos, sharedFiles, sharedLinks },
+                buttons: {
+                    sharedImages: document.getElementById('images-tab'),
+                    sharedVideos: document.getElementById('videos-tab'),
+                    sharedFiles: document.getElementById('files-tab'),
+                    sharedLinks: document.getElementById('links-tab')
+                }
+            },
+            options: {
+                tabs: { customize, manage},
+                buttons: {
+                    customize: document.getElementById('customize-tab'),
+                    manage: document.getElementById('manage-tab')
+                }
+            }
+        };
+        initTabSwitcher(subTabConfigs); 
+
+        const dropDownConfigs = {
+            notificationDropDown: {
+                type: { notification },
+                button: {
+                    notification: document.getElementById('notification-button')
+                }
+            },
+            profileDropDown: {
+                type: { profile },
+                button: {
+                    profile: document.getElementById('profile-button')
+                }
+            }
+        };
+
+        contactButtons.forEach((button, index) => {
+            const dropDown = contactDropDowns[index];
+            if (button && dropDown) {
+                dropDownConfigs[`contactDropDown${index}`] = {
+                    type: { contact: dropDown },
+                    button: { contact: button }
+                };
+            }
+        });
+
+        initDropDownConfig(dropDownConfigs);
+
+        // Output box show latest chat
+        window.addEventListener('load', function() {
+            const chatContainer = document.querySelector('.chat-display-area');
+
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+
+        // toggle third column
+        function toggleColumn() {
+            const thirdCol = document.getElementById('third-column');
+            const secondCol = thirdCol.previousElementSibling;
+
+            if (thirdCol.classList.contains('hidden')) {
+                thirdCol.classList.remove('hidden');
+                secondCol.classList.remove('col-span-10');
+                secondCol.classList.add('col-span-7');
+            } else {
+                thirdCol.classList.add('hidden');
+                secondCol.classList.remove('col-span-7');
+                secondCol.classList.add('col-span-10');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Convert conversation times (sidebar)
+            document.querySelectorAll('small[data-timestamp]').forEach(el => {
+                el.textContent = `• ${getTimeAgo(el.dataset.timestamp)} ago`;
+            });
+            
+            // Convert message times (chat bubbles)
+            document.querySelectorAll('span[data-timestamp]').forEach(el => {
+                const utcTime = new Date(el.dataset.timestamp);
+                el.textContent = utcTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+            
+            // Convert separator times (timestamp separators)
+            document.querySelectorAll('div[data-timestamp]').forEach(el => {
+                const timestampValue = el.dataset.timestamp;
+
+                if (timestampValue && timestampValue !== 'None') {
+                    const utcTime = new Date(timestampValue);
+                    if (!isNaN(utcTime.getTime())) {
+                            el.textContent = utcTime.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        console.error('Invalid date:', timestampValue);
+                        el.textContent = 'Invalid date';
+                    }
+                } 
+            });
+        });
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const utcTime = new Date(timestamp);
+            const diffMs = now - utcTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 60) return `${diffMins} minutes`;
+            if (diffHours < 24) return `${diffHours} hours`;
+            return `${diffDays} days`;
+        }
+        
+        document.addEventListener('click', (e) => {
+            const deleteButton = e.target.closest('.delete-message');
+            if (deleteButton) {
+                if (deleteButton.classList.contains('file')) deleteFile(deleteButton.dataset.messageId);
+                else deleteMessage(deleteButton.dataset.messageId);
+            }
+        });
+
+        function deleteMessage(messageId) {
+            fetch(`/delete-message/${messageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    console.error('Failed to delete message');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function deleteFile(messageId) {
+            fetch(`/delete-file/${messageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            })
+            .catch(error => console.error(error));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        let openDropdown = null;
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.message-dropdown-btn')) {
+                const dropdown = e.target.closest('.message-dropdown-btn').nextElementSibling;
+                if (dropdown) {
+                    // Close previous dropdown
+                    if (openDropdown && openDropdown !== dropdown) {
+                        openDropdown.classList.add('hidden');
+                    }
+                    dropdown.classList.toggle('hidden');
+                    openDropdown = dropdown.classList.contains('hidden') ? null : dropdown;
+                }
+            } else if (!e.target.closest('.message-dropdown')) {
+                // Close any open dropdown
+                if (openDropdown) {
+                    openDropdown.classList.add('hidden');
+                    openDropdown = null;
+                }
+            }
+        });
+    </script>
+    <script>
+        const chatMessageInput = document.querySelector('#chat-message-input');
+        const chatMessageSubmit = document.querySelector('#chat-message-submit');
+
+        let lastMessageTime = null;
+        const lastMessageTimeData = JSON.parse(document.getElementById('last-message-time').textContent);
+
+        const csUrl = `${protocol}//${host}/ws/chat/${userId}/${otherUserId}/`;
+        const chatSocket = new WebSocket(csUrl);
+
+        if (lastMessageTimeData) {
+            lastMessageTime = new Date(lastMessageTimeData);
+        }
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            if (data.type === 'video_call_offer') {
+                if (data.from_user !== userId) {
+                    if (confirm('Incoming video call. Accept?')) {
+                        document.getElementById('video-call-modal').classList.remove('hidden');
+                        answerCall(data.offer, data.from_user);
+                    }
+                }
+                return;
+            }
+
+            if (data.type === 'video_call_answer') {
+                handleCallAnswer(data.answer);
+                return;
+            }
+
+            if (data.type === 'ice_candidate') {
+                if (pc && pc.remoteDescription) {
+                    pc.addIceCandidate(data.candidate);
+                } else {
+                    if (!window.queuedCandidates) window.queuedCandidates = [];
+                    window.queuedCandidates.push(data.candidate);
+                }
+                return;
+            }
+
+            if (data.type === 'video_call_end') {
+                cleanUp();
+                return;
+            }
+
+            const message = data.message;
+            const messageType = data.message_type;
+            const messageCaption = data.message_caption !== null ? data.message_caption : null;
+            const messageSize = data.message_size !== null ? data.message_size : null;
+
+            if (data.type === 'delete') {
+                const messageElement = document.querySelector(`[data-message-id="${data.message_id}"]`).closest('.message-parent');
+                if (messageElement) {
+                    messageElement.remove();
+                }
+            } else if (message) {
+                const senderId = data.sender_id;
+                const chatContainer = document.querySelector('.chat-display-area');
+                const currentTime = new Date();
+                const timeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                if (lastMessageTime && (currentTime - lastMessageTime) > 86400000) {
+                    const separatorElement = document.createElement('div');
+                    separatorElement.classList.add('flex', 'justify-center', 'my-4');
+                    separatorElement.innerHTML = `
+                        <div class="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                            ${currentTime.toLocaleDateString('en-US', {
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                            })}
+                        </div>
+                    `;
+                    chatContainer.appendChild(separatorElement);
+                }
+
+                const messageElement = document.createElement('div');
+                
+                if (senderId === userId) {
+                    messageElement.classList.add('message-parent', 'flex', 'group/delete', 'justify-end', 'items-center', 'space-x-4', 'mb-2');
+                    const messageContent = `
+                        <div class="relative">
+                            <div class="opacity-0 group-hover/delete:opacity-100 flex items-center justify-center w-6 h-6 rounded-full hover:bg-heliolight cursor-pointer shadow-lg group message-dropdown-btn">
+                                <span class="text-black text-lg font-medium group-hover:text-heliotrope">...</span>
+                            </div>
+
+                            <div class="hidden absolute top-6 right-0 bg-white p-4 shadow-lg rounded z-10 message-dropdown">
+                                <button class="flex items-center justify-center space-x-2 group/dropdown delete-message ${messageType === 'image' || messageType === 'video' || messageType === 'document' || messageType === 'link' || messageType === 'audio' ? 'file' : ''}" data-message-id="${data.message_id}">
+                                    <svg class="w-4 h-4 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span class="text-gray-700 text-sm group-hover/dropdown:text-heliotrope">Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="max-w-3/4 bg-fuchsia-400 text-black ${messageType === 'audio' ? 'rounded-2xl' : 'rounded-lg'} shadow relative ${messageType === 'text' ? 'pr-16' : ''} pb-4">
+                            ${getContent(messageType, message, messageCaption, messageSize, data.message_id)}
+                            <span class="text-xs text-fuchsia-100 absolute bottom-1 right-2">${timeString}</span>
+                        </div>
+                    `;
+                    messageElement.innerHTML = messageContent;
+                } else {
+                    messageElement.classList.add('message-parent', 'flex', 'group/delete', 'justify-start', 'items-center', 'space-x-4', 'mb-2');
+                    const messageContent = `
+                        <div class="max-w-3/4 bg-white text-black ${messageType === 'audio' ? 'rounded-2xl' : 'rounded-lg'} shadow relative ${messageType === 'text' ? 'pr-16' : ''} pb-4">
+                            ${getContent(messageType, message, messageCaption, messageSize, data.message_id)}
+                            <span class="text-xs text-gray-500 absolute bottom-1 right-2">${timeString}</span>
+                        </div>
+                        <div class="relative">
+                            <div class="opacity-0 group-hover/delete:opacity-100 flex items-center justify-center w-6 h-6 rounded-full hover:bg-heliolight cursor-pointer shadow-lg group message-dropdown-btn">
+                                <span class="text-black text-lg font-medium group-hover:text-heliotrope">...</span>
+                            </div>
+
+                            <div class="hidden absolute top-6 left-0 bg-white p-4 shadow-lg rounded z-10 message-dropdown">
+                                <button class="flex items-center justify-center space-x-2 group/dropdown delete-message ${messageType === 'image' || messageType === 'video' || messageType === 'document' || messageType === 'link' || messageType === 'audio' ? 'file' : ''}" data-message-id="${data.message_id}">
+                                    <svg class="w-4 h-4 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span class="text-gray-700 text-sm group-hover/dropdown:text-heliotrope">Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    messageElement.innerHTML = messageContent;
+                }
+                chatContainer.appendChild(messageElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                lastMessageTime = currentTime;
+            }
+        };
+
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connected');
+        };
+
+        chatSocket.onerror = function(e) {
+            console.log('WebSocket error:', e);
+        };
+
+        window.addEventListener('beforeunload', function() {
+            chatSocket.close();
+        });
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly.', e.code, e.reason);
+
+            setTimeout(() => {
+                new WebSocket(`${protocol}//${host}/ws/chat/${userId}/${otherUserId}/`);
+            }, 3000);
+        };
+
+        chatMessageInput.focus();
+
+        chatMessageInput.onkeyup = function(e) {
+            if (e.key === 'Enter') {
+                chatMessageSubmit.click();
+            }
+        }
+
+        let isSubmitting = false;
+
+        chatMessageSubmit.addEventListener('click', () => {
+            if(isSubmitting) return;
+            isSubmitting = true;
+
+            if (selectedFile && fileType === 'image') {
+                const imageCaptionValue = document.getElementById('image-caption')?.value || '';
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                formData.append('image_caption', imageCaptionValue);
+                formData.append('receiver_id', otherUserId);
+
+                fetch('/upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        chatSocket.send(JSON.stringify({
+                            'type': 'image',
+                            'image_url': data.image_url,
+                            'sender_id': userId,
+                            'receiver_id': otherUserId,
+                            'image_id': data.image_id,
+                            'image_caption': data.image_caption
+                        }));
+                        selectedFile = null;
+                        fileType = null;
+                        document.getElementById('attach-file').value = '';
+                        document.querySelector('.image-preview')?.remove();
+                        isSubmitting = false;
+                    }
+                });
+            } else if (selectedFile && fileType === 'video') {
+                const formData = new FormData();
+                formData.append('video', selectedFile);
+                formData.append('receiver_id', otherUserId);
+                
+                fetch('/upload-video', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        chatSocket.send(JSON.stringify({
+                            'type': 'video',
+                            'video_url': data.video_url,
+                            'sender_id': userId,
+                            'receiver_id': otherUserId,
+                            'video_id': data.video_id
+                        }));
+                        selectedFile = null;
+                        fileType = null;
+                        document.getElementById('attach-file').value = '';
+                        document.querySelector('.video-preview')?.remove();
+                        isSubmitting = false;
+                    }
+                });
+            } else if (selectedFile && fileType === 'document') {
+                const formData = new FormData();
+                formData.append('document', selectedFile);
+                formData.append('receiver_id', otherUserId);
+
+                fetch('/upload-document', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const cleanDocumentName = data.document_name.includes('shared_files') ? data.document_name.substring(data.document_name.indexOf('/') + 1) : data.document_name;
+                        chatSocket.send(JSON.stringify({
+                            'type': 'document',
+                            'document_url': data.document_url,
+                            'document_name': cleanDocumentName,
+                            'document_size': data.document_size,
+                            'sender_id': userId,
+                            'receiver_id': otherUserId,
+                            'document_id': data.document_id
+                        }));
+                        selectedFile = null;
+                        fileType = null;
+                        document.getElementById('attach-file').value = '';
+                        document.querySelector('.file-preview')?.remove();
+                        isSubmitting = false;
+                    }
+                });
+            } else {
+                if (chatMessageInput.value.trim() === '') return;
+                const message = chatMessageInput.value;
+
+                if (isValidUrl(message)) {
+                    const formData = new FormData();
+                    formData.append('link', message);
+                    formData.append('receiver_id', otherUserId);
+
+                    fetch('/upload-link', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            chatSocket.send(JSON.stringify({
+                                'type': 'link',
+                                'link': data.link,
+                                'sender_id': userId,
+                                'receiver_id': otherUserId,
+                                'link_id': data.link_id
+                            }));
+                            chatMessageInput.value = '';
+                            isSubmitting = false;
+                        }
+                    });
+                } else {
+                    chatSocket.send(JSON.stringify({
+                        'type': 'text',
+                        'message': message,
+                        'sender_id': userId,
+                        'receiver_id': otherUserId
+                    }));
+                    isSubmitting = false;
+                    chatMessageInput.value = '';
+                }
+            }
+        });
+
+        function uploadAudio(audioBlob) {
+            const formData = new FormData();
+
+            formData.append('audio', audioBlob, 'audio.wav');
+            formData.append('receiver_id', '{{ other_user.id }}');
+
+            fetch('/upload-audio', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    chatSocket.send(JSON.stringify({
+                        'type': 'audio',
+                        'audio_url': data.audio_url,
+                        'sender_id': userId,
+                        'receiver_id': otherUserId,
+                        'audio_id': data.audio_id
+                    }));
+                }
+            });
+        }
+    </script>
+    <script>
+        let selectedFile = null;
+        let fileType = null;
+
+        document.getElementById('attach-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const fileName = file.name.toLowerCase();
+            const isDocument = fileName.endsWith('.pdf') || fileName.endsWith('.doc') || fileName.endsWith('.docx') || fileName.endsWith('.txt');
+            if (file && file.type.startsWith('image/')) {
+                fileType = 'image';
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.createElement('div');
+                    preview.className = 'flex justify-center items-start p-2 bg-gray-700 rounded image-preview';
+                    preview.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-center w-40 h-40 rounded-md">
+                                <img src="${e.target.result}" class="max-w-40 max-h-40 rounded-md">
+                            </div>
+                            <input type="text" id="image-caption" name="image-caption" placeholder="Add Caption..." class="w-40 text-sm p-1 focus:outline-none focus:bg-heliograyer rounded">
+                       </div>
+                        <button class="ml-2 text-lg text-white hover:text-heliotrope remove-preview">x</button>        
+                    `;
+                    preview.querySelector('.remove-preview').addEventListener('click', () => {
+                        preview.remove();
+                        selectedFile = null;
+                        document.getElementById('attach-file').value = '';
+                    });
+                    const inputContainer = document.querySelector('#preview-area');
+                    if (inputContainer.children.length === 0) inputContainer.appendChild(preview);
+                    else inputContainer.replaceChildren(preview);
+                };
+                reader.readAsDataURL(file);
+            } else if (file && file.type.startsWith('video/')) {
+                fileType = 'video';
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.createElement('div');
+                    preview.className = 'flex justify-center items-start p-2 bg-gray-700 rounded video-preview';
+                    preview.innerHTML = `
+                            <div class="w-56 rounded">
+                                <video src="${e.target.result}" class="rounded" controls></video>
+                            </div>
+                        <button class="ml-2 text-lg text-white hover:text-heliotrope remove-preview">x</button>        
+                    `;
+                    preview.querySelector('.remove-preview').addEventListener('click', () => {
+                        preview.remove();
+                        selectedFile = null;
+                        document.getElementById('attach-file').value = '';
+                    });
+
+                    const inputContainer = document.querySelector('#preview-area');
+                    if (inputContainer.children.length === 0) inputContainer.append(preview);
+                    else inputContainer.replaceChildren(preview);
+                };
+                reader.readAsDataURL(file);
+            } else if (file && isDocument) {
+                fileType = 'document';
+                selectedFile = file;
+                const preview = document.createElement('div');
+                preview.className = 'relative flex items-center justify-start bg-white p-2 file-preview w-56 space-x-2 rounded-t-md';
+                preview.innerHTML = `
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/>
+                            </svg>
+                            <div class="flex flex-col">
+                                <span class="text-sm">${file.name}</span>
+                                <span class="text-gray-500 text-xs">${(file.size / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                            <button class="absolute top-0 right-3 text-lg text-black hover:text-heliotrope remove-preview">x</button>        
+                            `;
+                preview.querySelector('.remove-preview').addEventListener('click', () => {
+                    preview.remove();
+                    selectedFile = null;
+                    document.getElementById('attach-file').value = '';
+                });
+
+                const inputContainer = document.querySelector('#preview-area');
+                if (inputContainer.children.length === 0) inputContainer.append(preview);
+                else inputContainer.replaceChildren(preview);
+            }
+        });
+
+        const getContent = (condition, content, imageCaption, size, contentId) => {
+            if (condition === 'image') {
+                return `<div class="w-44 h-44 rounded-md">
+                            <img src="${content}" alt="" class="w-44 h-44 object-cover rounded-md">
+                        </div>
+                        <p class="text-sm p-2">${imageCaption}</p>`;
+            } else if (condition === 'video') {
+                return `<div class="w-56 rounded mb-2">
+                            <video src="${content}" class="rounded" controls></video>
+                        </div>`;
+            } else if (condition === 'document') {
+                return `<div class="flex items-center justify-start pl-2 pt-2 pr-4 space-x-2 cursor-pointer">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/>
+                            </svg>
+                            <div class="flex flex-col">
+                                <span class="text-sm">${content}</span>
+                                <span class="text-gray-500 text-xs">${size} MB</span>
+                            </div>
+                        </div>`;
+            } else if (condition === 'link') {
+                return `<a href="${content}" target="_blank" class="block px-4 py-2 text-sm text-unvisited-link underline">${content}</a>`;
+            } else if (condition === 'audio') {
+                return `<div class="w-56 bg-gray-200 rounded-2xl p-3 mb-2">
+                            <audio src="${content}" class="hidden" data-audio-id="${contentId}"></audio>
+                            <div class="flex items-center space-x-3">
+                                <button class="play-btn w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white" data-audio-id="${contentId}">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8 5v10l8-5-8-5z"/>
+                                    </svg>
+                                </button>
+                                <div class="flex-1">
+                                    <div class="progress-bar w-full h-1 bg-gray-300 rounded cursor-pointer" data-audio-id="${contentId}">
+                                        <div class="progress w-0 h-full bg-blue-500 rounded"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span class="current-time">0:00</span>
+                                        <span class="duration">0:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>  `;
+            } else {
+                return `<p class="text-sm p-3">${content}</p>`
+            }
+        };
+
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const isValidImageUrl = (url) => {
+            try{
+                return url.startsWith('/media/');
+            } catch {
+                return false;
+            }
+        };
+    </script>
+    <script>
+        let lastSeenTimestamps = {};
+
+        const psUrl = `${protocol}//${host}/ws/presence/${userId}/`;
+        const presenceSocket = new WebSocket(psUrl);
+
+        presenceSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === 'user_status') {
+                const elements = document.querySelectorAll(`[data-other-user-id="${data.user_id}"]`);
+                elements.forEach(element => {
+                    if (element) {
+                        if (data.is_active) {
+                            element.textContent = 'Active';
+                            delete lastSeenTimestamps[data.user_id];
+                        } else {
+                            lastSeenTimestamps[data.user_id] = data.last_seen;
+                            element.textContent = last_seen(data.last_seen);
+                        }
+                    }
+                });
+            }
+        };
+
+        setInterval(() => {
+            for (const [userId, timestamp] of Object.entries(lastSeenTimestamps)) {
+                const elements = document.querySelectorAll(`[data-other-user-id="${userId}"]`); 
+                elements.forEach(element => {
+                    if (element) {
+                        element.textContent = last_seen(timestamp);
+
+                    }
+                });
+            }
+        }, 600000);
+
+        setInterval(() => {
+            console.log('checked again');
+            presenceSocket.send(JSON.stringify({type: 'heartbeat'}));
+        }, 600000);
+
+        function last_seen(timestamp) {
+            const utcTime = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - utcTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 60) {
+                return `Last seen ${diffMins === 1 ? diffMins + ' ' + 'minute' : diffMins + ' ' + 'minutes'} ago`;
+            } else if (diffMins > 60 && diffHours < 24) {
+                const hours = Math.floor(diffMins / 60);
+                const remainingMins = diffMins % 60;
+                return `Last seen ${hours === 1 ? hours + ' ' + 'hour' : hours + ' ' + 'hours'}, 
+                            ${remainingMins === 1 ? remainingMins + ' ' + 'minute' : remainingMins + ' ' + 'minutes'} ago`;
+            } else {
+                const days = Math.floor(diffHours / 24);
+                const remainingHours = diffHours % 24;
+                return `Last seen ${days === 1 ? days + ' ' + 'day' : days + ' ' + 'days'}, 
+                        ${remainingHours === 1 ? remainingHours + ' ' + 'hour' : remainingHours + ' ' + 'hours'} ago`;
+            }
+        }
+    </script>
+    <script>
+        function getSharedFiles() {
+            fetch(`/get-shared-files/${otherUserId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('media-images').innerHTML = data.image_data
+                    .filter(image => isValidImageUrl(image.image_url))
+                    .map(image => (
+                        `<div class="w-22 h-22 flex items-center justify-center cursor-pointer media-image-file">
+                            <img src="${image.image_url}" alt="" class="w-full h-full object-cover rounded">    
+                        </div>`
+                )).join('');
+
+                document.getElementById('media-videos').innerHTML = data.video_data
+                    .map(video => (
+                        `<div class="w-28 h-16 relative media-video-file cursor-pointer">
+                            <video class="w-full h-full rounded-md object-cover">
+                                <source src="${video.video_url}" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                                </svg>
+                            </div>
+                        </div>`
+                    )).join('');
+                
+                document.getElementById('media-files').innerHTML = data.file_data
+                    .map(file => (
+                        `<div class="flex items-center justify-start space-x-4 cursor-pointer">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/>
+                            </svg>
+                            <div class="flex flex-col">
+                                <span class="text-sm">${file.file_name}</span>
+                                <span class="text-gray-500 text-xs">${file.file_size} MB</span>
+                            </div>
+                        </div>`
+                    )).join('');
+
+                document.getElementById('media-links').innerHTML = data.link_data
+                    .map(link => (
+                        `<a href="${link.link}" target="_blank" class="block text-sm text-unvisited-link underline">${link.link}</a>`
+                    )).join('');
+
+                // Video Modal
+                document.querySelectorAll('.media-video-file').forEach((container, index) => {
+                    container.addEventListener('click', function() {
+                        const mediaVideoModal = document.getElementById('media-video-modal');
+                        const videoSrc = this.querySelector('video source').src;
+                        mediaVideoModal.innerHTML = `<div class="relative max-w-3xl w-full mx-4 overflow-hidden">
+                                                        <video class="w-full h-96 object-cover" controls autoplay>
+                                                            <source src="${videoSrc}" type="video/mp4">
+                                                        </video>
+                                                    </div>
+                                                    <button type="button" class="media-video-button absolute top-4 right-4 bg-white rounded-full w-10 h-10 flex items-center justify-center z-10 text-black font-bold">x</button>`;
+                        mediaVideoModal.classList.remove('hidden');
+                    });
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('media-video-button')) {
+                        closeMediaVideoModal();
+                    }
+                });
+
+                function closeMediaVideoModal() {
+                    const modal = document.getElementById('media-video-modal');
+                    const modalVideo = modal.querySelector('video');
+
+                    if (modalVideo) {
+                        modalVideo.pause();
+                    }
+
+                    modal.classList.add('hidden');
+                }
+
+                const mediaModalCarousel = document.getElementById('media-modal-carousel');
+                mediaModalCarousel.innerHTML = '';
+                let carouselImagesCount = [];
+                let currentIndex = 0;
+
+                document.querySelectorAll('.media-image-file').forEach((container, index) => {
+                    carouselImagesCount.push(index);
+                    container.dataset.index = index;
+                    const imageSrc = container.querySelector('img').src;
+                    mediaModalCarousel.innerHTML += `<img src="${imageSrc}" alt="" class="w-full h-96 object-contain flex-shrink-0">`;
+
+                    container.addEventListener('click', function() {
+                        currentIndex = index;
+                        const mediaCarouselModal = document.getElementById('media-carousel-modal');
+                        mediaCarouselModal.classList.remove('hidden');
+                        updateCarousel();
+                    });
+                });
+
+                document.getElementById('next-image').addEventListener('click', () => {
+                    nextImage();
+                });
+                
+                document.getElementById('prev-image').addEventListener('click', () => {
+                    prevImage();
+                });
+
+                document.getElementById('close-carousel').addEventListener('click', () => {
+                    const mediaCarouselModal = document.getElementById('media-carousel-modal');
+                    if (mediaCarouselModal) mediaCarouselModal.classList.add('hidden');
+                });
+
+                function updateCarousel() {
+                    const mediaModalCarousel = document.getElementById('media-modal-carousel');
+                    mediaModalCarousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+                }
+
+                function prevImage() {
+                    currentIndex = (currentIndex - 1 + carouselImagesCount.length) % carouselImagesCount.length;
+                    updateCarousel();
+                }
+
+                function nextImage() {
+                    currentIndex = (currentIndex + 1) % carouselImagesCount.length;
+                    updateCarousel();
+                }
+            });
+        }
+
+        getSharedFiles();
+    </script>
+    <script>
+        const theme = {
+            'blue-background': 'bg-blue-200',
+            'default-background': 'bg-heliolight'
+        };
+        document.getElementById('blue-theme').addEventListener('click', () => {
+            document.querySelector('.chat-display-area').classList.remove(theme['default-background']);
+            document.querySelector('.chat-display-area').classList.add(theme['blue-background']);
+        });
+
+        document.getElementById('default-theme').addEventListener('click', () => {
+            document.querySelector('.chat-display-area').classList.remove(theme['blue-background']);
+            document.querySelector('.chat-display-area').classList.add(theme['default-background']);
+        });
+
+        const backgroundThemeHeader = document.getElementById('background-theme-header');
+
+        function setBackground(bgUrl) {
+            document.querySelector('.chat-display-area').style.backgroundImage = `url(${bgUrl})`;
+            localStorage.setItem('chatBackground', bgUrl);
+
+            if (!document.querySelector('#remove-background')) {
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'text-xxs text-gray-800 font-medium bg-heliolight hover:bg-heliotrope px-1 cursor-pointer rounded remove-background';
+                removeBtn.id = 'remove-background';
+                removeBtn.textContent = 'Remove Background';
+                backgroundThemeHeader.appendChild(removeBtn);
+
+                removeBtn.addEventListener('click', () => {
+                    localStorage.removeItem('chatBackground');
+                    document.querySelector('.chat-display-area').style.backgroundImage = '';
+                    removeBtn.remove();
+                });
+            }
+        }
+        
+        document.querySelectorAll('.background-option').forEach(bg => {
+            bg.addEventListener('click', function () {
+                setBackground(this.dataset.bgUrl);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedBackground = localStorage.getItem('chatBackground');
+            if (savedBackground) {
+                setBackground(savedBackground);
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('click', (e) => {
+            const toggleBlock = e.target.closest('.toggle-block');
+            if (toggleBlock) {
+                const otherUserId = toggleBlock.dataset.otherUserId;
+                fetch(`/toggle-block-user/${otherUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload()
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const archiveChat = e.target.closest('.archive-chat');
+            if (archiveChat) {
+                const otherUserId = archiveChat.dataset.archiveChat;
+                fetch(`/archive-chat/${otherUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success === true) {
+                        location.reload()
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-chat')) {
+                const deleteBtn = e.target.closest('.delete-chat')
+                const chatId = deleteBtn.getAttribute('data-delete-chat');
+                
+                fetch(`/delete-chat/${chatId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to delete the conversation.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
+    <script>
+        document.getElementById('mute').addEventListener('click', () => {
+            const selected = document.querySelector('input[name="mute-duration"]:checked');
+            const threadName = '{{ thread_name }}';
+
+
+            if (selected) {
+                switch(selected.id) {
+                    case 'mute-fifteen-mins':
+                        muteFor(threadName, 15 * 60 * 1000);
+                        break;
+                    case 'mute-an-hour':
+                        muteFor(threadName, 60 * 60 * 1000);
+                        break;
+                    case 'mute-a-day':
+                        muteFor(threadName, 24 * 60 * 60 * 1000);
+                        break;
+                    case 'infinite':
+                        muteFor(threadName, null);
+                        break;
+                }
+            }
+        });
+
+        function muteFor(threadName, time) {
+            if (time === null) {
+                muteConversation(threadName, time);
+                return;
+            }
+            
+            muteConversation(threadName, time);
+            setTimeout(() => {
+                unmuteProcess(threadName);
+            }, time);
+        }
+
+        function unmuteProcess(threadName) {
+            unmuteConversation(threadName);
+            localStorage.removeItem('mutedElements');
+            isMuted = false;
+            muteButton.classList.add('hover:bg-heliolight');
+            muteButton.innerHTML = muteElements;
+        }
+    </script>
+    <script type="module">
+        import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@1.26.3/+esm';
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            const emojiBtn = document.querySelector('#emoji-btn');
+            const pickerContainer = document.querySelector('#emoji-picker-container');
+            const picker = pickerContainer.querySelector('emoji-picker');
+            const textarea = document.querySelector('#chat-message-input');
+
+            emojiBtn.addEventListener('click', () => {
+                pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none';
+            });
+
+            picker.addEventListener('emoji-click', event => {
+                textarea.value += event.detail.unicode;
+                textarea.focus();
+                pickerContainer.style.display = 'none';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!pickerContainer.contains(e.target) && e.target !== emojiBtn) {
+                    pickerContainer.style.display = 'none';
+                } 
+            });
+
+        });
+    </script>
+    <script>
+        document.querySelector('#video-call-button').addEventListener('click', () => {
+            console.log('WebSocket state:', chatSocket.readyState);
+            setInterval(() => {
+                console.log('WebSocket state check:', chatSocket.readyState);
+            }, 5000);
+
+            document.getElementById('video-call-modal').classList.remove('hidden');
+            startVideoCall('{{ other_user.id }}');
+        });
+
+        document.querySelector('#end-call').addEventListener('click', () => {
+            endVideoCall();
+        });
+
+        function endVideoCall() {
+
+            chatSocket.send(JSON.stringify({
+                type: 'video_call_end',
+                to_user: '{{ other_user.id }}'
+            }));
+
+            cleanUp();
+        }
+
+        function cleanUp() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    track.stop();
+                    track.enabled = false;
+                });
+            }
+
+            if (pc) {
+                pc.close();
+                pc = null;
+            }
+
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('remote-video').srcObject = null;
+            document.getElementById('video-call-modal').classList.add('hidden');
+
+            localStream = null;
+            pc = null;
+        }
+    </script>
+    <script>
+        let searchTimeout;
+        let originalConversations = null;
+        
+        document.querySelector('input[placeholder="Search contact / chat"').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(() => {
+                const conversationContainer = document.querySelector('.first-column');
+
+                if (originalConversations === null) {
+                    originalConversations = Array.from(conversationContainer.querySelectorAll('.conversation-item'))
+                                            .map(item => item.outerHTML);
+                }
+
+                if (!e.target.value.trim()) {
+                    if (conversationContainer.querySelector('.empty-search')) conversationContainer.querySelector('.empty-search').remove();
+                    conversationContainer.querySelectorAll('.conversation-item').forEach(conv => conv.remove());
+
+                    originalConversations.forEach(html => {
+                        conversationContainer.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    const contactButtons = document.querySelectorAll('.contact-button');
+                    const contactDropDowns = document.querySelectorAll('.contact-dropdown');
+                    const dropDownConfigs = {};
+
+                    contactButtons.forEach((button, index) => {
+                        const dropDown = contactDropDowns[index];
+                        if (button && dropDown) {
+                            dropDownConfigs[`contactDropDown${index}`] = {
+                                type: { contact: dropDown },
+                                button: { contact: button }
+                            };
+                        }
+                    });
+
+                    initDropDownConfig(dropDownConfigs);
+                    return;
+                }
+
+                fetch(`/search-conversations/?q=${e.target.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.conversations.length === 0) {
+                        conversationContainer.querySelectorAll('.conversation-item').forEach(conv => conv.remove());
+                        conversationContainer.insertAdjacentHTML('beforeend', `<p class="text-sm text-gray-500 italic text-center empty-search">Search result not found.</p>`);
+                        return;
+                    }
+
+                    const conversations = conversationContainer.querySelectorAll('.conversation-item');
+                    conversations.forEach(conv => conv.remove());
+
+                    data.conversations.forEach(conv => {
+                        const conversationHTML = `
+                                    <div class="relative pl-5 pr-4 py-2 hover:bg-heliograyer cursor-pointer conversation-item" data-conversation-user-id="${conv.other_user_id}">
+                                        <div class="flex-1">
+                                            <a href="/chat/${conv.other_user_id}" class="flex items-center space-x-4 flex-1">
+                                                <div class="w-12 h-12">
+                                                    <img src="${conv.photo_url || '/static/img/default.jpg'}" alt="" class="rounded w-full h-full object-cover">
+                                                </div>
+                                                <div class="text-gray-800">
+                                                    <div class="flex items-center space-x-4">
+                                                        <p class="text-sm font-medium conversation-username">${conv.first_name + ' ' + conv.last_name}</p>
+                                                    </div>
+                                                    <div class="flex items-center space-x-4 mt-0.5">
+                                                        <p class="text-xs conversation-content">${conv.content}</p><small class="text-gray-600 text-xxs" data-timestamp="${conv.timestamp}">&#8226; ${getTimeAgo(conv.timestamp)} ago</small>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>`;
+                        
+                        conversationContainer.insertAdjacentHTML('beforeend', conversationHTML);
+                    });
+                });
+            }, 300);
+        });
+    </script>
+    <script>
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.play-btn')) {
+                const btn = e.target.closest('.play-btn');
+                const audioId = btn.dataset.audioId;
+                const audio = document.querySelector(`audio[data-audio-id="${audioId}"]`);
+                const container = btn.closest('.w-56');
+
+                if (!audio.hasAttribute('data-listeners-added')) {
+                    audio.setAttribute('data-listeners-added', 'true');
+
+                    audio.addEventListener('timeupdate', () => {
+                        const progress = container.querySelector('.progress');
+                        const currentTime = container.querySelector('.current-time');
+                        const percent = (audio.currentTime / audio.duration) * 100;
+
+                        progress.style.width = percent + '%';
+                        currentTime.textContent = formatTime(audio.currentTime);
+                    });
+
+                    audio.addEventListener('ended', () => {
+                        btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8 5v10l8-5-8-5z"/>
+                                        </svg>`;
+                        audio.currentTime = 0;
+                        container.querySelector('.progress').style.width = '0%';
+                        container.querySelector('.current-time').textContent = '0:00';
+                    });
+
+                    audio.addEventListener('loadedmetadata', () => {
+                        container.querySelector('.duration').textContent = formatTime(audio.duration);
+                    });
+
+                    if (audio.duration) {
+                        container.querySelector('.duration').textContent = formatTime(audio.duration);
+                    }
+                }
+
+                if (audio.paused) {
+                    audio.play();
+
+                    btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M6 4h2v12H6V4zm6 0h2v12h-2V4z"/>
+                                    </svg>`; 
+
+                } else {
+                    audio.pause();
+                    btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8 5v10l8-5-8-5z"/>
+                                    </svg>`;
+                }
+            }
+        });
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>

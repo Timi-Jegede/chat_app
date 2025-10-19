@@ -1,0 +1,758 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        /* Firefox */
+        .scroll-content {
+            /* scrollbar-color: #888 transparent;
+            scrollbar-width: thin; */
+            scrollbar-gutter: stable;
+        }
+
+        .scroll-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-content::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .scroll-content:hover {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    {% include 'chat/nav-bar.html' with active_page="contacts" %}
+    
+    <!-- Body Section -->
+     <div class="grid grid-cols-13 pt-16">
+
+        <!-- Search and List Section -->
+        <div class="col-span-3 fixed w-78">
+            <div class="pt-6 pb-3">
+                <div class="border-b border-heliolight">
+                    <div class="px-6 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-2">
+                                <p class="text-xl text-gray-800 font-bold">Contacts</p>
+                                {% if contact_count %}
+                                    <p class="text-ssm text-gray-400 font-medium">{{ contact_count }} contacts</p>
+                                {% else %}
+                                    <p class="text-ssm text-gray-400 font-medium">No contacts yet</p>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'chat_users' %}" class="block">
+                                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-heliograyer hover:bg-heliolight group cursor-pointer">
+                                    <span class="text-gray-600 font-bold text-lg group-hover:text-heliotrope">+</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="flex items-center justify-start space-x-5">
+                            <span id="contacts-list-tab" class="text-sm font-medium h-7 cursor-pointer">All</span>
+                            <span id="new-contacts-tab" class="text-gray-700 text-sm font-medium h-7 hover:text-heliotrope cursor-pointer">New</span>
+                            <span id="favorite-contacts-tab" class="text-gray-700 text-sm font-medium h-7 hover:text-heliotrope cursor-pointer">Favorites</span>
+                            <span id="blocked-contacts-tab" class="text-gray-700 text-sm font-medium h-7 hover:text-heliotrope cursor-pointer">Blocked</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-hidden scroll-content h-108">
+
+                <!-- Search contacts / chats -->
+                <div class="fixed px-6 pt-3 pb-3 w-75 bg-white z-50">
+                    <div class="relative">
+                        <input type="text" placeholder="Search contact / chat" class="pl-10 focus:outline-none focus:bg-heliolight bg-heliograyer rounded-full w-full p-2">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact list items -->
+                <div id="contacts-list" class="pt-16">
+                    {% for contact in contacts %}
+                        <div class="group relative px-6 py-3 flex items-center justify-start space-x-4 {% if forloop.first %}bg-heliograyer{% endif %} hover:bg-heliograyer cursor-pointer contact-item" data-contact-id="{{ contact.contact.id }}">
+                            <div class="w-12 h-12">
+                                <img src="{{ contact.contact.profile.photo.url }}" alt="" class="rounded w-full h-full object-cover">
+                            </div>
+                            <div class="text-gray-800 space-y-0.5">
+                                <p class="text-base font-medium">{{ contact.contact.first_name }} {{ contact.contact.last_name }}</p>
+                                <p class="text-sm">@{{ contact.contact.username }}</p>
+                            </div>
+                            <div class="group/button group-hover:flex hidden w-9 h-9 rounded-full bg-white absolute right-4 hover:bg-heliolight flex items-center justify-center contact-button">
+                                <span class="font-bold text-base group-hover/button:text-heliotrope">...</span>
+                            </div>
+
+                            <!-- contact dropdown -->
+                            <div class="hidden z-10 w-50 bg-white absolute right-4 top-13 border border-gray-200 rounded-md contact-dropdown">
+                                <div class="p-4 border-b border-gray-200 space-y-3">
+                                    <a href="{% url 'private_chat' contact.contact.id %}" class="flex items-center flex-1 block space-x-4">
+                                        <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Send Message</p>
+                                        </div>
+                                    </a>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-favorite" data-contact-id="{{ contact.contact.id }}">
+                                        {% if contact.is_favorite == False %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Add to Favorites</p>
+                                        {% else %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-heliotrope" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Favorite</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer delete-contact" data-contact-id="{{ contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Remove</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-block" data-contact-id="{{ contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Block</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Report</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="pl-5 pr-4 pt-4 pb-4 text-center text-gray-500">
+                            <p class="text-sm italic">No contacts found</p>
+                            <a href="{% url 'chat_users' %}" class="text-xs text-heliotrope hover:underline">Add new contacts</a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- New Contact list items -->
+                <div id="new-contacts" class="pt-16 hidden">
+                    {% for new_contact in new_contacts %}
+                        <div class="group relative px-6 py-3 flex items-center justify-start space-x-4 hover:bg-heliograyer cursor-pointer contact-item" data-contact-id="{{ new_contact.contact.id }}">
+                            <div class="w-12 h-12">
+                                <img src="{{ new_contact.contact.profile.photo.url }}" alt="" class="rounded w-full h-full object-cover">
+                            </div>
+                            <div class="text-gray-800 space-y-0.5">
+                                <p class="text-base font-medium">{{ new_contact.contact.first_name }} {{ new_contact.contact.last_name }}</p>
+                                <p class="text-sm">@{{ new_contact.contact.username }}</p>
+                            </div>
+                            <div class="group/button group-hover:flex hidden w-9 h-9 rounded-full bg-white absolute right-4 hover:bg-heliolight group flex items-center justify-center contact-button">
+                                <span class="font-bold text-base group-hover/button:text-heliotrope">...</span>
+                            </div>
+
+                            <!-- contact dropdown -->
+                            <div class="hidden z-10 w-50 bg-white absolute right-4 top-13 border border-gray-200 rounded-md contact-dropdown">
+                                <div class="p-4 border-b border-gray-200 space-y-3">
+                                    <a href="{% url 'private_chat' new_contact.contact.id %}" class="block">
+                                        <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Send Message</p>
+                                        </div>
+                                    </a>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-favorite" data-contact-id="{{ new_contact.contact.id }}">
+                                        {% if new_contact.is_favorite == False %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Add to Favorites</p>
+                                        {% else %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-heliotrope" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Favorite</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer delete-contact" data-contact-id="{{ new_contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Remove</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-block" data-contact-id="{{ new_contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Block</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Report</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500 text-sm px-6">No new contacts found.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Favorites Contact list items -->
+                <div id="favorite-contacts" class="pt-16 hidden">
+                    {% for favorite_contact in favorite_contacts %}
+                        <div class="group relative px-6 py-3 flex items-center justify-start space-x-4 hover:bg-heliograyer cursor-pointer contact-item" data-contact-id="{{ favorite_contact.contact.id }}">
+                            <div class="w-12 h-12">
+                                <img src="{{ favorite_contact.contact.profile.photo.url }}" alt="" class="rounded w-full h-full object-cover">
+                            </div>
+                            <div class="text-gray-800 space-y-0.5">
+                                <p class="text-base font-medium">{{ favorite_contact.contact.first_name }} {{ favorite_contact.contact.last_name }}</p>
+                                <p class="text-sm">@{{ favorite_contact.contact.username }}</p>
+                            </div>
+                            <div class="group/button group-hover:flex hidden w-9 h-9 rounded-full bg-white absolute right-4 hover:bg-heliolight group flex items-center justify-center contact-button">
+                                <span class="font-bold text-base group-hover/button:text-heliotrope">...</span>
+                            </div>
+
+                            <!-- contact dropdown -->
+                            <div class="hidden z-10 w-50 bg-white absolute right-4 top-13 border border-gray-200 rounded-md contact-dropdown">
+                                <div class="p-4 border-b border-gray-200 space-y-3">
+                                    <a href="{% url 'private_chat' favorite_contact.contact.id %}" class="block">
+                                        <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Send Message</p>
+                                        </div>
+                                    </a>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-favorite" data-contact-id="{{ favorite_contact.contact.id }}">
+                                        {% if favorite_contact.is_favorite == False %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Add to Favorites</p>
+                                        {% else %}
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-heliotrope" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Favorite</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer delete-contact" data-contact-id="{{ favorite_contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Remove</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-block" data-contact-id="{{ favorite_contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Block</p>
+                                    </div>
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Report</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500 text-sm px-6">No favorite contacts found.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Blocked Contact list items -->
+                <div id="blocked-contacts" class="pt-16 hidden">
+                    {% for blocked_contact in blocked_contacts %}
+                        <div class="group relative px-6 py-3 flex items-center justify-start space-x-4 hover:bg-heliograyer cursor-pointer">
+                            <div class="w-12 h-12">
+                                <img src="{{ blocked_contact.contact.profile.photo.url }}" alt="" class="rounded w-full h-full object-cover">
+                            </div>
+                            <div class="text-gray-800 space-y-0.5">
+                                <p class="text-base font-medium">{{ blocked_contact.contact.first_name }} {{ blocked_contact.contact.last_name }}</p>
+                                <p class="text-sm">@{{ blocked_contact.contact.username }}</p>
+                            </div>
+                            <div class="group/button group-hover:flex hidden w-9 h-9 rounded-full bg-white absolute right-4 hover:bg-heliolight group flex items-center justify-center contact-button">
+                                <span class="font-bold text-base group-hover/button:text-heliotrope">...</span>
+                            </div>
+
+                            <!-- contact dropdown -->
+                            <div class="hidden z-10 w-50 bg-white absolute right-4 top-13 border border-gray-200 rounded-md contact-dropdown">
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-center justify-start space-x-2 group/dropdown cursor-pointer toggle-block" data-contact-id="{{ blocked_contact.contact.id }}">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-400">Unblock</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500 text-sm px-6">No blocked contacts found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts Details Section -->
+        <div class="col-span-10 ml-78 bg-heliolight w-full">
+            <div class="max-w-4.625xl mx-auto mt-8 mb-8">
+                <div class="space-y-5">
+                    
+                    <!-- First section -->
+                    <div class="rounded-2xl bg-white">
+                        <div class="w-full h-116">
+                            <img id="contact-header-img" src="{% if first_user.contact.profile and first_user.contact.profile.header_img.url %}{{ first_user.contact.profile.header_img.url }}{% else %}{% static 'img/backgrounds/hero.jpg' %}{% endif %}" alt="" class="w-full h-full object-cover">
+                        </div>
+                        <div class="bg-white flex items-center justify-start p-7 rounded-b-2xl space-x-4">
+                            <div class="w-36 h-36 border-2 border-white rounded-md -mt-14 overflow-hidden">
+                                <img id="contact-profile-pic" src="{% if first_user.contact.profile and first_user.contact.profile.photo.url %}{{ first_user.contact.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center space-x-1">
+                                    <p id="contact-name" class="text-xl font-bold text-gray-800">{% if first_user.contact.first_name and first_user.contact.last_name %}{{ first_user.contact.first_name }} {{ first_user.contact.last_name }}{% elif first_user.contact.first_name %}{{ first_user.contact.first_name }}{% else %}Name{% endif %}</p>
+                                    <small id="contact-username" class="text-sm text-gray-600">{% if first_user.contact.username %}@{{ first_user.contact.username }}{% else %}@username{% endif %}</small>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <p id="contact-contacts-count" class="text-sm text-gray-700">{% if first_user_contacts_count %}{{ first_user_contacts_count }}{% else %}0{% endif %} Contacts</p>
+                                    <small class="text-xs text-gray-500">&#x25cf; &nbsp;0 Groups</small>
+                                </div>
+                                <div id="own-contacts-images" class="flex items-center">
+                                    {% for contact in first_user_contacts_selected %}
+                                        <div class="w-8 h-8 rounded-full overflow-hidden z-10 border-1.5 border-white {% if forloop.first %}ml-0{% else %}-ml-2.5{% endif %}">
+                                            <img src="{{ contact.contact.profile.photo.url }}" alt="" class="w-full h-full object-cover">
+                                        </div>
+                                    {% empty %}
+                                        <div></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Section -->
+                    <div>
+                        <div class="space-x-5">
+                            <span id="about-contact-tab" class="text-sm text-heliotrope font-medium h-7 border-b-2 border-heliotrope inline-flex cursor-pointer">About</span>
+                        </div>
+                        <div class="bg-white px-8 py-8 rounded-b-2xl">
+
+                            <!-- About Contact -->
+                             <div id="about-contact" class="space-y-6">
+                                <div class="space-y-3">
+                                    <p id="contact-bio-title" class="text-gray-800 font-bold text-lg">About {% if first_user.contact.first_name %}{{ first_user.contact.first_name }}{% endif %}</p>
+                                    <p id="contact-bio" class="w-96 text-lg text-gray-700">{% if first_user.contact.profile.bio %}{{ first_user.contact.profile.bio }}{% else %}No bio avaialble{% endif %}</p>
+                                    <div class="flex items-center justify-start space-x-4">
+                                        <div class="w-10 h-10 rounded-md flex items-center justify-center bg-heliograyer">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="12" fill="#6B7280"/>
+                                                <path d="M15.12 5.32H17V2.14C16.68 2.097 15.49 2 14.13 2c-2.79 0-4.7 1.7-4.7 4.82v2.84H6.61v3.58h2.82V20h3.46v-6.82h2.69l.43-3.58h-3.12V7.05c0-1.01.28-1.7 1.73-1.73z" fill="white"/>
+                                            </svg>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-md flex items-center justify-center bg-heliograyer">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="12" fill="#6B7280"/>
+                                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="white"/>
+                                            </svg>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-md flex items-center justify-center bg-heliograyer">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="12" fill="#6B7280"/>
+                                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="white"/>
+                                            </svg>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-md flex items-center justify-center bg-heliograyer">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="12" fill="#6B7280"/>
+                                                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-.04-.1z" fill="white"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-lg font-bold text-gray-800">Basic Info</p>
+                                    <div class="space-x-12 flex items-center justify-start">
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 6c1.11 0 2-.9 2-2 0-.38-.1-.73-.29-1.03L12 1l-1.71 1.97c-.19.3-.29.65-.29 1.03 0 1.1.9 2 2 2zm4.6 9.99l-1.07-1.07-1.08 1.07c-1.3 1.3-3.58 1.31-4.89 0l-1.07-1.07-1.09 1.07C6.75 16.64 5.88 17 4.96 17c-.73 0-1.4-.23-1.96-.61V21c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4.61c-.56.38-1.23.61-1.96.61-.92 0-1.79-.36-2.44-1.01zM18 9H6c-1.66 0-3 1.34-3 3v1c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">Birthday</p>
+                                            <p id="contact-birthdate" class="text-lg font-medium text-gray-800">{% if first_user.contact.profile.birthdate %}{{ first_user.contact.profile.birthdate|date:"F j, Y" }}{% else %}None{% endif %}</p>
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 2c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">Gender</p>
+                                            <p id="contact-gender" class="text-lg font-medium text-gray-800">{% if first_user.contact.profile.gender %}{{ first_user.contact.profile.gender }}{% else %}None{% endif %}</p>
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">Language</p>
+                                            <p id="contact-language" class="text-lg font-medium text-gray-800">{% if first_user.contact.profile.language %}{{ first_user.contact.profile.language }}{% else %}None{% endif %}</p>
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 texty-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M15 11V5l-3-3-3 3v2H3v14h18V11h-6zm-8 8H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm6 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">City</p>
+                                            <p id="contact-city" class="text-lg font-medium text-gray-800">{% if first_user.contact.profile.city %}{{ first_user.contact.profile.city }}{% else %}None{% endif %}</p>
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">Phone No</p>
+                                            <p id="contact-phone-no" class="text-lg font-medium text-gray-800">{% if first_user.contact.profile.phone_no %}{{ first_user.contact.profile.phone_no }}{% else %}None{% endif %}</p>
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            <div class="w-10 h-10 rounded-md flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">Email</p>
+                                            <p id="contact-email" class="text-lg font-medium text-gray-800">{% if first_user.contact.email %}{{ first_user.contact.email }}{% else %}None{% endif %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/dropdown-config.js' %}"></script>
+    <script src="{% static 'js/tab-switcher.js' %}"></script>
+    <script>
+        const [contactsList, newContacts, favoriteContacts, blockedContacts, notification, profile] =
+                ['contacts-list', 'new-contacts', 'favorite-contacts', 'blocked-contacts',
+                    'notification-dropdown', 'profile-dropdown'].map(id => document.getElementById(id));
+        const contactButtons = document.querySelectorAll('.contact-button');
+        const contactDropDowns = document.querySelectorAll('.contact-dropdown');
+
+        const dropDownConfigs = {
+            notificationDropDown: {
+                type: { notification },
+                button: {
+                    notification: document.getElementById('notification-button')
+                }
+            },
+            profileDropDown: {
+                type: { profile },
+                button: {
+                    profile: document.getElementById('profile-button')
+                }
+            }
+        };
+
+        contactButtons.forEach((button, index) => {
+            const dropDown = contactDropDowns[index];
+            if (button && dropDown) {
+                dropDownConfigs[`contactDropDown${index}`] = {
+                    type: { contact: dropDown },
+                    button: { contact: button }
+                };
+            }
+        });
+        
+        initDropDownConfig(dropDownConfigs);
+
+        const tabConfigs = {
+            contactList: {
+                tabs: { contactsList, newContacts, favoriteContacts, blockedContacts },
+                buttons: {
+                    contactsList: document.getElementById('contacts-list-tab'),
+                    newContacts: document.getElementById('new-contacts-tab'),
+                    favoriteContacts: document.getElementById('favorite-contacts-tab'),
+                    blockedContacts: document.getElementById('blocked-contacts-tab')
+                },
+            },
+        };
+
+        initTabSwitcher(tabConfigs);
+        
+        document.addEventListener('click', (e) => {
+            const deleteContact = e.target.closest('.delete-contact');
+            if (deleteContact) {
+                const contactId = deleteContact.dataset.contactId;
+                fetch(`/delete-contact/${contactId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        saveActiveTab();
+                        location.reload();
+                    } else {
+                        console.error('Error deleting contact:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const contactItem = e.target.closest('.contact-item');
+            if (contactItem) {
+                const contactId = contactItem.dataset.contactId;
+                
+                // Update selection
+                document.querySelectorAll('.contact-item').forEach(item => {
+                    item.classList.remove('bg-heliograyer');
+                });
+                contactItem.classList.add('bg-heliograyer');
+                
+                // Fetch contact data
+                fetch(`/get-contact-profile/${contactId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const updates = {
+                        'contact-name': `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'No Name Available',
+                        'contact-username': `@${data.username || 'No Username Available'}`,
+                        'contact-bio-title': `About ${data.first_name || 'No First Name Available'}`,
+                        'contact-bio': data.bio || 'No Bio Available',
+                        'contact-birthdate': data.birthdate ? new Date(data.birthdate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : 'None',
+                        'contact-gender': data.gender || 'None',
+                        'contact-language': data.language || 'None',
+                        'contact-city': data.city || 'None',
+                        'contact-phone-no': data.phone_no || 'None',
+                        'contact-email': data.email || 'None',
+                        'contact-contacts-count': `${data.contact_own_contacts_qs_count || 0} Contacts`
+                    };
+                    
+                    Object.entries(updates).forEach(([id, value]) => {
+                        document.getElementById(id).textContent = value;
+                    });
+                    
+                    document.getElementById('contact-profile-pic').src = data.profile_pic_url ? data.profile_pic_url : `{% static 'img/default.jpg' %}`;
+
+                    document.getElementById('contact-header-img').src = data.header_img_url ? data.header_img_url : `{% static 'img/backgrounds/hero.jpg' %}`;
+
+                    const ownContactsImages = document.getElementById('own-contacts-images');
+                    if (data.contact_own_contacts_qs_selected) {
+                        ownContactsImages.innerHTML = data.contact_own_contacts_qs_selected.map((contact, index) => 
+                            `<div class="w-8 h-8 rounded-full overflow-hidden z-10 border-1.5 border-white ${index === 0 ? 'ml-0' : '-ml-2.5'}">
+                                <img src="${contact.contact_profile_pic}" alt="" class="w-full h-full object-cover">
+                            </div>`
+                        );
+                    } else {
+                        ownContactsImages.innerHTML = `<div></div>`;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const toggleFavorite = e.target.closest('.toggle-favorite');
+            if (toggleFavorite) {
+                const contactId = toggleFavorite.dataset.contactId;
+                fetch(`/toggle-favorite/${contactId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    } 
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })            
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (data.is_favorite === true) {
+                            toggleFavorite.innerHTML = `<div class="w-5 h-5 flex items-center justify-center">
+                                                            <svg class="w-5 h-5 text-heliotrope" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Favorite</p>`;
+                            saveActiveTab();
+                            location.reload();
+                        } else {
+                            toggleFavorite.innerHTML = `<div class="w-5 h-5 flex items-center justify-center">
+                                                            <svg class="w-5 h-5 text-gray-500 group-hover/dropdown:text-heliotrope" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <p class="text-sm font-medium text-gray-500 group-hover/dropdown:text-heliotrope">Add to Favorites</p>`;
+                            saveActiveTab();
+                            location.reload();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const toggleBlock = e.target.closest('.toggle-block');
+            if (toggleBlock) {
+                const contactId = toggleBlock.dataset.contactId;
+                fetch(`/toggle-block/${contactId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        saveActiveTab();
+                        location.reload()
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+            }
+        });
+
+        function saveActiveTab() {
+            [contactsList, newContacts, favoriteContacts, blockedContacts].forEach((tab, i) => {
+                if (!tab.classList.contains('hidden')) {
+                    localStorage.setItem('activeTab', i);
+                }
+            });
+        }
+
+        function restoreActiveTab() {
+            document.getElementById('contacts-list-tab').classList.add('text-heliotrope', 'border-b-2', 'border-heliotrope');
+
+            const activeTabIndex = localStorage.getItem('activeTab');
+            if (activeTabIndex !== null && activeTabIndex !== 'null') {
+                const tabIndex = Number(activeTabIndex);
+                if (!isNaN(tabIndex)) {
+                    const tabs = [contactsList, newContacts, favoriteContacts, blockedContacts];
+                    const buttons = ['contacts-list-tab', 'new-contacts-tab', 'favorite-contacts-tab', 'blocked-contacts-tab'];
+                    
+                    tabs.forEach(tab => tab.classList.add('hidden'));
+                    tabs[tabIndex].classList.remove('hidden');
+
+                    buttons.forEach((buttonId, i) => {
+                        const button = document.getElementById(buttonId);
+                        const activeButton = i === tabIndex;
+
+                        button.classList.toggle('text-heliotrope', activeButton);
+                        button.classList.toggle('border-b-2', activeButton);
+                        button.classList.toggle('border-heliotrope', activeButton);
+                        button.classList.toggle('text-gray-700', !activeButton);
+                    });
+                }
+            } else {
+                contactsList.classList.remove('hidden');
+            }
+            localStorage.removeItem('activeTab');
+        }
+
+        document.addEventListener('DOMContentLoaded', restoreActiveTab);
+    </script>
+    <script src="{% static 'js/stories-revolver.js' %}"></script>
+</body>
+</html>

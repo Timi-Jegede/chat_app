@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archives</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+    <style>
+        /* Firefox */
+        .scroll-content {
+            /* scrollbar-color: #888 transparent;
+            scrollbar-width: thin; */
+            scrollbar-gutter: stable;
+        }
+
+        .scroll-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-content::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .scroll-content:hover {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="relative bg-heliolight min-h-screen pb-6">
+        <div class="absolute left-0 top-0 flex items-center justify-center ml-4 mt-4">
+            <a href="{% url 'index' %}" class="bg-heliotrope text-white px-2 py-1 rounded hover:bg-ebony shadow">Back To App</a>
+        </div>
+        <div class="flex flex-col items-start justify-start pl-8 pt-8">
+            <div class="max-w-xl w-full">
+                <div class="text-center my-4">
+                    <h1 class="text-gray-800 text-2xl font-bold">Archives</h1>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 space-y-2">
+                     {% for archive in archives %}
+                        <div class="relative flex items-center justify-start px-4 py-2 rounded space-x-4 shadow">
+                            <div class="w-12 h-12 rounded">
+                                <img src="{% if archive.other_user.profile and archive.other_user.profile.photo %}{{ archive.other_user.profile.photo.url }}{% else %}{% static 'img/default.jpg' %}{% endif %}" alt="{{ archive.other_user.username }}'s image" class="w-full h-full object-cover rounded">
+                            </div>
+                            <p class="text-gray-800 font-medium text-base">{{ archive.other_user.first_name }} {{ archive.other_user.last_name }} <span class="text-xs text-gray-500">@{{ archive.other_user.username }}</span></p>
+                            <div>
+                                {% if archive.latest_message %}
+                                    <p class="text-gray-600 text-sm">{{ archive.latest_message.content|truncatechars:50 }}</p>
+                                    <p class="text-gray-400 text-xs">{{ archive.latest_message.timestamp|date:"F j, Y, g:i A" }}</p>
+                                {% else %}
+                                    <p class="text-gray-600 text-sm">No messages</p>
+                                {% endif %}
+                            </div>
+
+                            <button class="absolute right-4 top-1/2 transform -translate-y-1/2 text-black font-bold cursor-pointer drop-down-btn">&#8942;</button>
+                            
+                            <div class="flex flex-col items-start justify-center absolute right-4 top-16 bg-white border border-gray-300 rounded shadow-md w-24 z-10 drop-down hidden">
+                                <button class="block px-4 py-1 text-gray-700 text-sm border-b border-gray-300 hover:text-heliotrope unarchive" data-unarchive-chat="{{ archive.other_user.id }}">Unarchive</button>
+                                <button class="block px-4 py-1 text-gray-700 text-sm hover:text-heliotrope delete-chat" data-delete-chat="{{ archive.other_user.id }}">Delete</button>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-600">No archives available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let openDropdown = null;
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.drop-down-btn')) {
+                const toggleDropdown = e.target.closest('.drop-down-btn');
+                const dropDown = toggleDropdown.nextElementSibling;
+
+                if (dropDown) {
+                    if (openDropdown && openDropdown !== dropDown) {
+                        openDropdown.classList.add('hidden');
+                    }
+                    dropDown.classList.toggle('hidden');
+                    openDropdown = dropDown.classList.contains('hidden') ? null : dropDown;
+                }
+            } else if (!e.target.closest('.drop-down')) {
+                if (openDropdown) {
+                    openDropdown.classList.add('hidden');
+                    openDropdown = null;
+                }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('unarchive')) {
+                const archiveId = e.target.getAttribute('data-unarchive-chat');
+                
+                fetch(`/unarchive/${archiveId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to unarchive the conversation.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-chat')) {
+                const chatId = e.target.getAttribute('data-delete-chat');
+                
+                fetch(`/delete-chat/${chatId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to delete the conversation.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
+</body>
+</html>

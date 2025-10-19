@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories</title>
+    <link href="{% static 'tailwindcss/dist/output.css' %}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Nav bar -->
+    {% include 'chat/nav-bar.html' with active_page='stories' %}
+
+    <!-- Body Section -->
+     <div class="grid grid-cols-13 pt-16">
+
+        <!-- Stories List Section -->
+        <div class="col-span-3 w-78">
+            <div class="pt-6 mb-6">
+                <div class="px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-2">
+                            <p class="text-xl text-gray-800 font-bold">Stories</p>
+                            <p class="text-ssm text-gray-400 font-medium">12 Unseen stories</p>
+                        </div>
+                        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-heliograyer hover:bg-heliolight group cursor-pointer">
+                            <span class="text-gray-600 font-bold text-lg group-hover:text-heliotrope">+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 pb-3">
+                <div id="stories-container" class="grid grid-cols-2 gap-4">
+                    <img src="{% static 'img/backgrounds/thumb-11.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer ring-2 ring-heliotrope border border-white">
+                    <img src="{% static 'img/marie.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer">
+                    <img src="{% static 'img/lucie.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer">
+                    <img src="{% static 'img/albert.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer">
+                    <img src="{% static 'img/jane.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer">
+                    <img src="{% static 'img/frances.jpg' %}" alt="" class="w-32 h-38 object-cover rounded-md cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stories Modal Section -->
+        <div class="col-span-10 bg-heliolight w-full">
+            <div class="w-136 h-168 mx-auto rounded-md my-8">
+            
+                <!-- Stories Modal -->
+                <div class="relative">
+                    <div id="stories-modal" class="w-136 h-168 rounded-md">
+                        <img src="{% static 'img/backgrounds/thumb-11-big.jpg' %}" alt="" class="w-full h-full object-cover rounded-md cursor-grab">
+                    </div>
+                    <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/60 rounded-t-md"></div>
+                    <div class="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/60 to-transparent rounded-b-md"></div>
+                    <div class="absolute px-6 py-6 top-0 left-0 space-y-1 w-full">
+                        <p class="text-lg text-white font-bold">Boating on Ohio lake</p>
+                        <p class="text-lg text-white font-medium">#boating, #Ohio</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full px-6 py-6 space-x-2 flex items-center justify-start">
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                        <div class="relative w-20 h-2">
+                            <div class="bg-white opacity-50 w-full h-full rounded-full"></div>
+                            <div class="absolute top-0 left-0 h-full w-0 bg-white rounded-full transition-all duration-4000 ease-in-out progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/stories-revolver.js' %}"></script>
+    <script src="{% static 'js/dropdown-config.js' %}"></script>
+    <script>
+        const [notification, profile] =
+               ['#notification-dropdown', '#profile-dropdown'].map(id => document.getElementById(id.slice(1)));
+        
+        const dropDownConfigs = {
+            notificationDropDown: {
+                type: { notification },
+                button: {
+                    notification: document.getElementById('notification-button')
+                }
+            },
+            profileDropDown: {
+                type: { profile },
+                button: {
+                    profile: document.getElementById('profile-button')
+                }
+            }
+        };
+    
+        initDropDownConfig(dropDownConfigs);
+    </script>
+</body>
+</html>
